@@ -14,10 +14,9 @@ BOOL CAnimatedDesktop::Init()
 	// 不能在DLLMain初始化GDI+
 	SetTimer(m_parentWnd, 0, 100, [](HWND hwnd, UINT, UINT_PTR, DWORD){
 		KillTimer(hwnd, 0);
-		auto it = s_instances.find(hwnd);
-		if (it == s_instances.end())
+		if (s_instance == NULL)
 			return;
-		CAnimatedDesktop* thiz = (CAnimatedDesktop*)it->second;
+		CAnimatedDesktop* thiz = (CAnimatedDesktop*)s_instance;
 
 		// 载入配置
 		TCHAR configPath[MAX_PATH];
@@ -51,10 +50,9 @@ BOOL CAnimatedDesktop::Init()
 			GdiplusShutdown(gdiplusToken);
 
 			SetTimer(thiz->m_parentWnd, 0, thiz->m_elapse, [](HWND hwnd, UINT, UINT_PTR, DWORD){
-				auto it = s_instances.find(hwnd);
-				if (it == s_instances.end())
+				if (s_instance == NULL)
 					return;
-				CAnimatedDesktop* thiz = (CAnimatedDesktop*)it->second;
+				CAnimatedDesktop* thiz = (CAnimatedDesktop*)s_instance;
 
 				if (++thiz->m_curFrame >= thiz->m_nImg)
 					thiz->m_curFrame = 0;
@@ -70,7 +68,6 @@ BOOL CAnimatedDesktop::Init()
 
 void CAnimatedDesktop::Uninit()
 {
-	// 貌似在不同线程，运气不好可能会崩溃...懒得加锁了
 	KillTimer(m_parentWnd, 0);
 
 	CCustomDesktop::Uninit();
