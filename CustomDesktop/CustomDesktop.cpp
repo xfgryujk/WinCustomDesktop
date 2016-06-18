@@ -65,7 +65,7 @@ void CCustomDesktop::Uninit()
 		}
 	}
 
-	s_instance = NULL;;
+	s_instance = NULL;
 	m_oldWndProc = NULL;
 	m_parentWnd = m_fileListWnd = NULL;
 }
