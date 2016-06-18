@@ -22,8 +22,8 @@ BOOL CAnimatedDesktop::Init()
 		TCHAR configPath[MAX_PATH];
 		GetEnvironmentVariable(_T("windir"), configPath, _countof(configPath));
 		_tcscat_s(configPath, _T("\\CustomDesktop.ini"));
-		thiz->m_nImg = GetPrivateProfileInt(_T("image"), _T("ImageCount"), 0, configPath);
-		if (thiz->m_nImg > 0)
+		int nImg = GetPrivateProfileInt(_T("image"), _T("ImageCount"), 0, configPath);
+		if (nImg > 0)
 		{
 			WCHAR imgsPath[MAX_PATH];
 			GetPrivateProfileStringW(L"image", L"ImagePath", L"", imgsPath, _countof(imgsPath), configPath);
@@ -37,8 +37,8 @@ BOOL CAnimatedDesktop::Init()
 			ULONG_PTR gdiplusToken = 0;
 			GdiplusStartupInput gdiplusStartupInput;
 			GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-			thiz->m_mdc = new MDC*[thiz->m_nImg];
-			for (int i = 0; i < thiz->m_nImg; i++)
+			thiz->m_mdc = new MDC*[nImg];
+			for (int i = 0; i < nImg; i++)
 			{
 				WCHAR imgPath[MAX_PATH];
 				swprintf_s(imgPath, imgsPath, i + 1);
@@ -48,18 +48,10 @@ BOOL CAnimatedDesktop::Init()
 				graphics.DrawImage(&img, 0, 0, thiz->m_width, thiz->m_height);
 			}
 			GdiplusShutdown(gdiplusToken);
+			thiz->m_nImg = nImg;
 
-			SetTimer(thiz->m_parentWnd, 0, thiz->m_elapse, [](HWND hwnd, UINT, UINT_PTR, DWORD){
-				if (s_instance == NULL)
-					return;
-				CAnimatedDesktop* thiz = (CAnimatedDesktop*)s_instance;
-
-				if (++thiz->m_curFrame >= thiz->m_nImg)
-					thiz->m_curFrame = 0;
-				RECT rect = { thiz->m_x, thiz->m_y, thiz->m_x + thiz->m_width, thiz->m_y + thiz->m_height };
-				InvalidateRect(thiz->m_fileListWnd, &rect, FALSE);
-				UpdateWindow(thiz->m_fileListWnd);
-			});
+			// 自动重画
+			SetTimer(thiz->m_parentWnd, 0, thiz->m_elapse, TimerProc);
 		}
 	});
 
@@ -81,9 +73,24 @@ void CAnimatedDesktop::Uninit()
 	}
 }
 
+VOID CAnimatedDesktop::TimerProc(HWND, UINT, UINT_PTR, DWORD)
+{
+	if (s_instance == NULL)
+		return;
+	CAnimatedDesktop* thiz = (CAnimatedDesktop*)s_instance;
+
+	if (++thiz->m_curFrame >= thiz->m_nImg)
+		thiz->m_curFrame = 0;
+	RECT rect = { thiz->m_x, thiz->m_y, thiz->m_x + thiz->m_width, thiz->m_y + thiz->m_height };
+	InvalidateRect(thiz->m_fileListWnd, &rect, TRUE);
+	UpdateWindow(thiz->m_fileListWnd);
+}
+
 void CAnimatedDesktop::OnDrawBackground(HDC hdc)
 {
 	CCustomDesktop::OnDrawBackground(hdc);
+	if (m_nImg <= 0)
+		return;
 
 	BLENDFUNCTION bf;
 	bf.BlendOp = AC_SRC_OVER;

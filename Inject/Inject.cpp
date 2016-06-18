@@ -5,6 +5,33 @@
 #include <tlhelp32.h>
 
 
+// 提升进程特权，否则在XP中无法打开进程
+BOOL EnablePrivilege(BOOL enable)
+{
+	// 得到令牌句柄
+	HANDLE hToken = NULL;
+	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY | TOKEN_READ, &hToken))
+		return FALSE;
+
+	// 得到特权值
+	LUID luid;
+	if (!LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &luid))
+		return FALSE;
+
+	// 提升令牌句柄权限
+	TOKEN_PRIVILEGES tp = {};
+	tp.PrivilegeCount = 1;
+	tp.Privileges[0].Luid = luid;
+	tp.Privileges[0].Attributes = enable ? SE_PRIVILEGE_ENABLED : 0;
+	if (!AdjustTokenPrivileges(hToken, FALSE, &tp, 0, NULL, NULL))
+		return FALSE;
+
+	// 关闭令牌句柄
+	CloseHandle(hToken);
+
+	return TRUE;
+}
+
 // 注入DLL，返回模块句柄（64位程序只能返回低32位）
 HMODULE InjectDll(HANDLE process, LPCTSTR dllPath)
 {
@@ -15,14 +42,14 @@ HMODULE InjectDll(HANDLE process, LPCTSTR dllPath)
 	if (remoteMemory == NULL)
 	{
 		printf("申请内存失败，错误代码：%u\n", GetLastError());
-		return 0;
+		return NULL;
 	}
 
 	// 写入DLL路径
 	if (!WriteProcessMemory(process, remoteMemory, dllPath, dllPathSize, NULL))
 	{
 		printf("写入内存失败，错误代码：%u\n", GetLastError());
-		return 0;
+		return NULL;
 	}
 
 	// 创建远线程调用LoadLibrary
@@ -66,6 +93,7 @@ BOOL FreeRemoteDll(HANDLE process, HMODULE remoteModule)
 	return result != 0;
 }
 
+// 取其他进程模块句柄
 HMODULE GetRemoteModuleHandle(DWORD pid, LPCTSTR moduleName)
 {
 	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid);
@@ -91,6 +119,8 @@ HMODULE GetRemoteModuleHandle(DWORD pid, LPCTSTR moduleName)
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	EnablePrivilege(TRUE);
+
 	// 打开进程
 	HWND hwnd = FindWindow(_T("Progman"), _T("Program Manager"));
 	DWORD pid;

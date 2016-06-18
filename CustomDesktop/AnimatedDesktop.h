@@ -10,6 +10,8 @@ public:
 	virtual void Uninit();
 
 protected:
+	static VOID CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD);
+
 	virtual void OnDrawBackground(HDC hdc);
 
 
