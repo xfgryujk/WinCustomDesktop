@@ -44,14 +44,15 @@ BOOL CAnimatedDesktop::Init()
 				swprintf_s(imgPath, imgsPath, i + 1);
 				Image img(imgPath);
 				thiz->m_mdc[i] = new MDC(thiz->m_width, thiz->m_height);
-				Graphics graphics(thiz->m_mdc[i]->getDC());
+				Graphics graphics(*thiz->m_mdc[i]);
 				graphics.DrawImage(&img, 0, 0, thiz->m_width, thiz->m_height);
 			}
 			GdiplusShutdown(gdiplusToken);
 			thiz->m_nImg = nImg;
 
 			// 自动重画
-			SetTimer(thiz->m_parentWnd, 0, thiz->m_elapse, TimerProc);
+			if (nImg > 1)
+				SetTimer(thiz->m_parentWnd, 0, thiz->m_elapse, TimerProc);
 		}
 	});
 
@@ -68,7 +69,7 @@ void CAnimatedDesktop::Uninit()
 	{
 		for (int i = 0; i < m_nImg; i++)
 			delete m_mdc[i];
-		delete m_mdc;
+		delete[] m_mdc;
 		m_mdc = NULL;
 	}
 }
@@ -97,5 +98,5 @@ void CAnimatedDesktop::OnDrawBackground(HDC hdc)
 	bf.BlendFlags = 0;
 	bf.SourceConstantAlpha = 255;
 	bf.AlphaFormat = 1;
-	GdiAlphaBlend(hdc, m_x, m_y, m_width, m_height, m_mdc[m_curFrame]->getDC(), 0, 0, m_width, m_height, bf);
+	GdiAlphaBlend(hdc, m_x, m_y, m_width, m_height, *m_mdc[m_curFrame], 0, 0, m_width, m_height, bf);
 }

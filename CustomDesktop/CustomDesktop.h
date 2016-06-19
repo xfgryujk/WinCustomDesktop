@@ -7,6 +7,7 @@ protected:
 	// 其实应该设计为单例的，但是这个类应该可以被继承...
 	static CCustomDesktop* s_instance;
 
+	HWND m_topWnd = NULL;
 	HWND m_parentWnd = NULL;
 	HWND m_fileListWnd = NULL;
 

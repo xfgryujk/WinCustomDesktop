@@ -35,6 +35,7 @@ BOOL EnablePrivilege(BOOL enable)
 // 注入DLL，返回模块句柄（64位程序只能返回低32位）
 HMODULE InjectDll(HANDLE process, LPCTSTR dllPath)
 {
+	DWORD remoteModule = 0;
 	DWORD dllPathSize = ((DWORD)_tcslen(dllPath) + 1) * sizeof(TCHAR);
 
 	// 申请内存用来存放DLL路径
@@ -49,7 +50,7 @@ HMODULE InjectDll(HANDLE process, LPCTSTR dllPath)
 	if (!WriteProcessMemory(process, remoteMemory, dllPath, dllPathSize, NULL))
 	{
 		printf("写入内存失败，错误代码：%u\n", GetLastError());
-		return NULL;
+		goto Free;
 	}
 
 	// 创建远线程调用LoadLibrary
@@ -57,17 +58,18 @@ HMODULE InjectDll(HANDLE process, LPCTSTR dllPath)
 	if (remoteThread == NULL)
 	{
 		printf("创建远线程失败，错误代码：%u\n", GetLastError());
-		return NULL;
+		goto Free;
 	}
 	// 等待远线程结束
 	WaitForSingleObject(remoteThread, INFINITE);
 	// 取DLL在目标进程的句柄
-	DWORD remoteModule;
-	GetExitCodeThread(remoteThread, &remoteModule);
+	if (!GetExitCodeThread(remoteThread, &remoteModule))
+		remoteModule = 0;
 
 	// 释放
 	CloseHandle(remoteThread);
-	VirtualFreeEx(process, remoteMemory, dllPathSize, MEM_DECOMMIT);
+Free:
+	VirtualFreeEx(process, remoteMemory, 0, MEM_RELEASE);
 
 	return (HMODULE)remoteModule;
 }
@@ -85,8 +87,9 @@ BOOL FreeRemoteDll(HANDLE process, HMODULE remoteModule)
 	// 等待远线程结束
 	WaitForSingleObject(remoteThread, INFINITE);
 	// 取返回值
-	DWORD result;
-	GetExitCodeThread(remoteThread, &result);
+	DWORD result = 0;
+	if (!GetExitCodeThread(remoteThread, &result))
+		result = 0;
 
 	// 释放
 	CloseHandle(remoteThread);

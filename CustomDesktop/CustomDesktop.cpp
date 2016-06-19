@@ -14,10 +14,10 @@ CCustomDesktop::~CCustomDesktop()
 // 初始化，寻找窗口句柄
 BOOL CCustomDesktop::Init()
 {
-	HWND desktopWnd = FindWindow(_T("Progman"), _T("Program Manager"));
-	if (desktopWnd == NULL)
+	HWND topWnd = FindWindow(_T("Progman"), _T("Program Manager"));
+	if (topWnd == NULL)
 		return FALSE;
-	HWND parentWnd = FindWindowEx(desktopWnd, NULL, _T("SHELLDLL_DefView"), _T(""));
+	HWND parentWnd = FindWindowEx(topWnd, NULL, _T("SHELLDLL_DefView"), _T(""));
 	if (parentWnd == NULL)
 		return FALSE;
 	HWND fileListWnd = FindWindowEx(parentWnd, NULL, _T("SysListView32"), _T("FolderView"));
@@ -41,6 +41,7 @@ BOOL CCustomDesktop::Init(HWND fileListWnd)
 
 	m_fileListWnd = fileListWnd;
 	m_parentWnd = GetParent(fileListWnd);
+	m_topWnd = GetParent(m_parentWnd);
 
 	m_oldWndProc = (WNDPROC)SetWindowLongPtr(m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)WndProc);
 	if (m_oldWndProc == NULL)
@@ -67,7 +68,7 @@ void CCustomDesktop::Uninit()
 
 	s_instance = NULL;
 	m_oldWndProc = NULL;
-	m_parentWnd = m_fileListWnd = NULL;
+	m_topWnd = m_parentWnd = m_fileListWnd = NULL;
 }
 
 // 静态窗口过程，传递WM_ERASEBKGND给动态的OnDrawBackground方法

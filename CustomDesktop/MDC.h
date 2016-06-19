@@ -4,13 +4,15 @@
 class MDC
 {
 public:
-	MDC();
+	MDC() = default;
 	MDC(int width, int height);
 	~MDC();
 
-	HDC getDC();
+	BOOL Create(int width, int height);
+	void Release();
+	operator HDC ();
 
 private:
-	HBITMAP oldBmp;
-	HDC mdc;
+	HBITMAP m_oldBmp = NULL;
+	HDC m_mdc = NULL;
 };
