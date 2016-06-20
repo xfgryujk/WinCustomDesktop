@@ -30,9 +30,14 @@ BOOL CMaskDesktop::Init()
 		WCHAR imgPath[MAX_PATH];
 		GetPrivateProfileStringW(appName, L"ImagePath", L"", imgPath, _countof(imgPath), configPath);
 		thiz->m_size = GetPrivateProfileInt(appName, L"Size", 100, configPath);
-		thiz->m_curPos = {};
-		thiz->m_scrSize.cx = GetSystemMetrics(SM_CXSCREEN);
-		thiz->m_scrSize.cy = GetSystemMetrics(SM_CYSCREEN);
+		POINT pos;
+		if (!GetCursorPos(&pos))
+			pos = {};
+		thiz->m_curPos = { (short)pos.x, (short)pos.y };
+		RECT rect;
+		if (!GetClientRect(thiz->m_fileListWnd, &rect))
+			rect = {};
+		thiz->m_scrSize = { rect.right - rect.left, rect.bottom - rect.top };
 
 		// 载入位图
 		ULONG_PTR gdiplusToken = 0;
@@ -47,7 +52,7 @@ BOOL CMaskDesktop::Init()
 		InvalidateRect(thiz->m_fileListWnd, NULL, TRUE);
 	});
 
-	return res;
+	return TRUE;
 }
 
 BOOL CMaskDesktop::OnEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
@@ -59,22 +64,20 @@ BOOL CMaskDesktop::OnEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
 	bf.BlendOp = AC_SRC_OVER;
 	bf.BlendFlags = 0;
 	bf.SourceConstantAlpha = 255;
-	bf.AlphaFormat = 1;
+	bf.AlphaFormat = AC_SRC_ALPHA;
 	GdiAlphaBlend(lpPaint->hdc, m_curPos.x - m_size / 2, m_curPos.y - m_size / 2, m_size, m_size
 		, m_mdc, 0, 0, m_size, m_size, bf);
 
-	ULONG_PTR gdiplusToken = 0;
-	GdiplusStartupInput gdiplusStartupInput;
-	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-	{
-		Graphics graphics(lpPaint->hdc);
-		SolidBrush brush(0xFE000000); // Alpha = 254 会改变目标的alpha值
-		graphics.FillRectangle(&brush, 0, 0, m_curPos.x - m_size / 2 + 1, m_scrSize.cy + 1);
-		graphics.FillRectangle(&brush, m_curPos.x - m_size / 2, 0, m_size, m_curPos.y - m_size / 2 + 1);
-		graphics.FillRectangle(&brush, m_curPos.x + m_size / 2 - 1, 0, m_scrSize.cx - m_curPos.x - m_size / 2 + 2, m_scrSize.cy);
-		graphics.FillRectangle(&brush, m_curPos.x - m_size / 2, m_curPos.y + m_size / 2 - 1, m_size, m_scrSize.cy - m_curPos.y - m_size / 2 + 2);
-	}
-	GdiplusShutdown(gdiplusToken);
+	HBRUSH brush = (HBRUSH)GetStockObject(BLACK_BRUSH);
+	RECT rect;
+	rect = { 0, 0, m_curPos.x - m_size / 2 + 1, m_scrSize.cy };
+	FillRect(lpPaint->hdc, &rect, brush);
+	rect = { m_curPos.x - m_size / 2 + 1, 0, m_curPos.x + m_size / 2 - 1, m_curPos.y - m_size / 2 + 1 };
+	FillRect(lpPaint->hdc, &rect, brush);
+	rect = { m_curPos.x + m_size / 2 - 1, 0, m_scrSize.cx, m_scrSize.cy };
+	FillRect(lpPaint->hdc, &rect, brush);
+	rect = { m_curPos.x - m_size / 2 + 1, m_curPos.y + m_size / 2 - 1, m_curPos.x + m_size / 2 - 1, m_scrSize.cy };
+	FillRect(lpPaint->hdc, &rect, brush);
 
 	return CBufferedDesktop::OnEndPaint(hWnd, lpPaint);
 }
@@ -84,8 +87,7 @@ LRESULT CMaskDesktop::OnFileListWndProc(HWND hwnd, UINT message, WPARAM wParam, 
 	switch (message)
 	{
 	case WM_SIZE:
-		m_scrSize.cx = LOWORD(lParam);
-		m_scrSize.cy = HIWORD(lParam);
+		m_scrSize = { LOWORD(lParam), HIWORD(lParam) };
 		break;
 
 	case WM_MOUSEMOVE:
@@ -114,7 +116,7 @@ LRESULT CMaskDesktop::OnFileListWndProc(HWND hwnd, UINT message, WPARAM wParam, 
 			rect.top = lastPos.y - m_size / 2 - 1;
 			rect.bottom = m_curPos.y + m_size / 2 + 1;
 		}
-		InvalidateRect(m_fileListWnd, &rect, FALSE);
+		InvalidateRect(m_fileListWnd, &rect, TRUE);
 
 		break;
 	}

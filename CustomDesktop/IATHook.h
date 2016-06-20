@@ -69,8 +69,9 @@ public:
 		__try
 		{
 			// 修改IAT中地址为hookFunction
-			DWORD oldProtect, oldProtect2;
-			VirtualProtect(m_importAddress, sizeof(FunctionType), PAGE_READWRITE, &oldProtect);
+			DWORD oldProtect = 0, oldProtect2 = 0;
+			if (!VirtualProtect(m_importAddress, sizeof(FunctionType), PAGE_READWRITE, &oldProtect))
+				oldProtect = 0;
 			*m_importAddress = hookFunction;
 			VirtualProtect(m_importAddress, sizeof(FunctionType), oldProtect, &oldProtect2);
 		}

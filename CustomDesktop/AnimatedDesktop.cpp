@@ -61,7 +61,7 @@ BOOL CAnimatedDesktop::Init()
 		}
 	});
 
-	return res;
+	return TRUE;
 }
 
 void CAnimatedDesktop::Uninit()
@@ -95,6 +95,6 @@ void CAnimatedDesktop::OnDrawBackground(HDC hdc)
 	bf.BlendOp = AC_SRC_OVER;
 	bf.BlendFlags = 0;
 	bf.SourceConstantAlpha = 255;
-	bf.AlphaFormat = 1;
+	bf.AlphaFormat = AC_SRC_ALPHA;
 	GdiAlphaBlend(hdc, m_pos.x, m_pos.y, m_size.cx, m_size.cy, m_mdc[m_curFrame], 0, 0, m_size.cx, m_size.cy, bf);
 }

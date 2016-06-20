@@ -15,7 +15,7 @@ MDC::~MDC()
 	Release();
 }
 
-BOOL MDC::Create(int width, int height)
+BOOL MDC::Create(int width, int height, WORD biBitCount)
 {
 	if (m_mdc != NULL)
 		Release();
@@ -30,9 +30,9 @@ BOOL MDC::Create(int width, int height)
 	bmpInfo.bmiHeader.biWidth = width;
 	bmpInfo.bmiHeader.biHeight = height;
 	bmpInfo.bmiHeader.biPlanes = 1;
-	bmpInfo.bmiHeader.biBitCount = 32;
+	bmpInfo.bmiHeader.biBitCount = biBitCount;
 	bmpInfo.bmiHeader.biCompression = BI_RGB;
-	bmpInfo.bmiHeader.biSizeImage = width * height * 4;
+	bmpInfo.bmiHeader.biSizeImage = width * height * bmpInfo.bmiHeader.biBitCount / 8;
 
 	void* pBits;
 	HBITMAP bmp = CreateDIBSection(NULL, &bmpInfo, DIB_RGB_COLORS, &pBits, NULL, 0);

@@ -8,7 +8,7 @@ public:
 	MDC(int width, int height);
 	~MDC();
 
-	BOOL Create(int width, int height);
+	BOOL Create(int width, int height, WORD biBitCount = 32);
 	void Release();
 	operator HDC ();
 
