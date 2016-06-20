@@ -19,19 +19,18 @@ BOOL CAnimatedDesktop::Init()
 		CAnimatedDesktop* thiz = (CAnimatedDesktop*)s_instance;
 
 		// 载入配置
-		TCHAR configPath[MAX_PATH];
-		GetEnvironmentVariable(_T("windir"), configPath, _countof(configPath));
-		_tcscat_s(configPath, _T("\\CustomDesktop.ini"));
-		int nImg = GetPrivateProfileInt(_T("image"), _T("ImageCount"), 0, configPath);
+		static const TCHAR configPath[] = _T("\\CustomDesktop.ini");
+		static const TCHAR appName[] = _T("AnimatedDesktop");
+		int nImg = GetPrivateProfileInt(appName, _T("ImageCount"), 0, configPath);
 		if (nImg > 0)
 		{
 			WCHAR imgsPath[MAX_PATH];
-			GetPrivateProfileStringW(L"image", L"ImagePath", L"", imgsPath, _countof(imgsPath), configPath);
-			thiz->m_elapse = GetPrivateProfileInt(_T("image"), _T("Elapse"), 50, configPath);
-			thiz->m_x = GetPrivateProfileInt(_T("image"), _T("X"), 0, configPath);
-			thiz->m_y = GetPrivateProfileInt(_T("image"), _T("Y"), 0, configPath);
-			thiz->m_width = GetPrivateProfileInt(_T("image"), _T("Width"), GetSystemMetrics(SM_CXSCREEN), configPath);
-			thiz->m_height = GetPrivateProfileInt(_T("image"), _T("Height"), GetSystemMetrics(SM_CYSCREEN), configPath);
+			GetPrivateProfileStringW(appName, L"ImagePath", L"", imgsPath, _countof(imgsPath), configPath);
+			thiz->m_elapse = GetPrivateProfileInt(appName, _T("Elapse"), 50, configPath);
+			thiz->m_x = GetPrivateProfileInt(appName, _T("X"), 0, configPath);
+			thiz->m_y = GetPrivateProfileInt(appName, _T("Y"), 0, configPath);
+			thiz->m_width = GetPrivateProfileInt(appName, _T("Width"), GetSystemMetrics(SM_CXSCREEN), configPath);
+			thiz->m_height = GetPrivateProfileInt(appName, _T("Height"), GetSystemMetrics(SM_CYSCREEN), configPath);
 
 			// 载入位图
 			ULONG_PTR gdiplusToken = 0;
