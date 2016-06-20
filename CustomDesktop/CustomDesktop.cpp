@@ -6,6 +6,13 @@
 CCustomDesktop* CCustomDesktop::s_instance = NULL;
 
 
+CCustomDesktop::CCustomDesktop() :
+	m_beginPaintHook(GetModuleHandle(_T("comctl32.dll")), "user32.dll", "BeginPaint"),
+	m_endPaintHook(GetModuleHandle(_T("comctl32.dll")), "user32.dll", "EndPaint")
+{
+
+}
+
 CCustomDesktop::~CCustomDesktop()
 {
 	Uninit();
@@ -27,7 +34,7 @@ BOOL CCustomDesktop::Init()
 	return Init(fileListWnd);
 }
 
-// 初始化，子类化窗口
+// 初始化，子类化窗口，hook
 BOOL CCustomDesktop::Init(HWND fileListWnd)
 {
 	if (fileListWnd == NULL)
@@ -50,6 +57,9 @@ BOOL CCustomDesktop::Init(HWND fileListWnd)
 		return FALSE;
 	}
 
+	m_beginPaintHook.Hook(MyBeginPaint);
+	m_endPaintHook.Hook(MyEndPaint);
+
 	return TRUE;
 }
 
@@ -65,6 +75,9 @@ void CCustomDesktop::Uninit()
 			UpdateWindow(m_fileListWnd);
 		}
 	}
+
+	m_endPaintHook.Unhook();
+	m_beginPaintHook.Unhook();
 
 	s_instance = NULL;
 	m_oldWndProc = NULL;
@@ -87,9 +100,45 @@ LRESULT CALLBACK CCustomDesktop::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
 	return CallWindowProc(thiz->m_oldWndProc, hwnd, msg, wParam, lParam);
 }
 
+// 静态BeginPaint的hook，传递给动态的OnBeginPaint方法
+HDC WINAPI CCustomDesktop::MyBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
+{
+	if (s_instance == NULL)
+		return NULL;
+	CCustomDesktop* thiz = s_instance;
+
+	if (hWnd == thiz->m_fileListWnd)
+		return thiz->OnBeginPaint(hWnd, lpPaint);
+
+	return thiz->m_beginPaintHook.GetOriginalFunction()(hWnd, lpPaint);
+}
+
+// 静态EndPaint的hook，传递给动态的OnEndPaint方法
+BOOL WINAPI CCustomDesktop::MyEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
+{
+	if (s_instance == NULL)
+		return FALSE;
+	CCustomDesktop* thiz = s_instance;
+
+	if (hWnd == thiz->m_fileListWnd)
+		return thiz->OnEndPaint(hWnd, lpPaint);
+
+	return thiz->m_endPaintHook.GetOriginalFunction()(hWnd, lpPaint);
+}
+
 // 实现绘制背景
 void CCustomDesktop::OnDrawBackground(HDC hdc)
 {
 	if (m_oldWndProc != NULL)
 		CallWindowProc(m_oldWndProc, m_parentWnd, WM_ERASEBKGND, (WPARAM)hdc, NULL);
+}
+
+HDC CCustomDesktop::OnBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
+{
+	return m_beginPaintHook.GetOriginalFunction()(hWnd, lpPaint);
+}
+
+BOOL CCustomDesktop::OnEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
+{
+	return m_endPaintHook.GetOriginalFunction()(hWnd, lpPaint);
 }
