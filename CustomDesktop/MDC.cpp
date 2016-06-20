@@ -17,6 +17,9 @@ MDC::~MDC()
 
 BOOL MDC::Create(int width, int height)
 {
+	if (m_mdc != NULL)
+		Release();
+
 	m_mdc = CreateCompatibleDC(NULL);
 	if (m_mdc == NULL)
 		return FALSE;

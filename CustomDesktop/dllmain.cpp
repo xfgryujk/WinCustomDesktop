@@ -1,9 +1,10 @@
 ﻿// dllmain.cpp : 定义 DLL 应用程序的入口点。
 #include "stdafx.h"
 #include "AnimatedDesktop.h"
+#include "MaskDesktop.h"
 
 
-CAnimatedDesktop g_customDesktop;
+CCustomDesktop* g_customDesktop = NULL;
 
 
 BOOL APIENTRY DllMain( HMODULE hModule,
@@ -14,11 +15,13 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
-		g_customDesktop.Init();
+		g_customDesktop = new CMaskDesktop();
+		g_customDesktop->Init();
 		break;
 
 	case DLL_PROCESS_DETACH:
-		g_customDesktop.Uninit();
+		if (g_customDesktop != NULL)
+			delete g_customDesktop;
 		break;
 
 	case DLL_THREAD_ATTACH:

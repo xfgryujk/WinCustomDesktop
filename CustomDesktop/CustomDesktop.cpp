@@ -66,14 +66,11 @@ BOOL CCustomDesktop::Init(HWND fileListWnd)
 // 释放，貌似在不同线程，运气不好可能会崩溃...懒得加锁了
 void CCustomDesktop::Uninit()
 {
-	if (IsWindow(m_parentWnd))
+	if (IsWindow(m_parentWnd) && m_oldWndProc != NULL)
 	{
 		SetWindowLongPtr(m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldWndProc);
 		if (IsWindow(m_fileListWnd))
-		{
 			InvalidateRect(m_fileListWnd, NULL, TRUE);
-			UpdateWindow(m_fileListWnd);
-		}
 	}
 
 	m_endPaintHook.Unhook();
@@ -117,7 +114,7 @@ HDC WINAPI CCustomDesktop::MyBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
 BOOL WINAPI CCustomDesktop::MyEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
 {
 	if (s_instance == NULL)
-		return FALSE;
+		return TRUE;
 	CCustomDesktop* thiz = s_instance;
 
 	if (hWnd == thiz->m_fileListWnd)

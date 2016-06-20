@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include <Windows.h>
 
 
 template<class FunctionType>
@@ -67,11 +66,18 @@ public:
 		if (m_importAddress == NULL)
 			return FALSE;
 
-		// 修改IAT中地址为hookFunction
-		DWORD oldProtect, oldProtect2;
-		VirtualProtect(m_importAddress, sizeof(FunctionType), PAGE_READWRITE, &oldProtect);
-		*m_importAddress = hookFunction;
-		VirtualProtect(m_importAddress, sizeof(FunctionType), oldProtect, &oldProtect2);
+		__try
+		{
+			// 修改IAT中地址为hookFunction
+			DWORD oldProtect, oldProtect2;
+			VirtualProtect(m_importAddress, sizeof(FunctionType), PAGE_READWRITE, &oldProtect);
+			*m_importAddress = hookFunction;
+			VirtualProtect(m_importAddress, sizeof(FunctionType), oldProtect, &oldProtect2);
+		}
+		__except (GetExceptionCode() == STATUS_ACCESS_VIOLATION ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
+		{
+			return FALSE;
+		}
 
 		return TRUE;
 	}

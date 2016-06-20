@@ -5,6 +5,11 @@
 using namespace Gdiplus;
 
 
+CAnimatedDesktop::~CAnimatedDesktop()
+{
+	Uninit(); // 为什么在父类析构函数不会调用子类的Uninit？
+}
+
 BOOL CAnimatedDesktop::Init()
 {
 	BOOL res = CCustomDesktop::Init();
@@ -21,30 +26,31 @@ BOOL CAnimatedDesktop::Init()
 		// 载入配置
 		static const TCHAR configPath[] = _T("\\CustomDesktop.ini");
 		static const TCHAR appName[] = _T("AnimatedDesktop");
+
 		int nImg = GetPrivateProfileInt(appName, _T("ImageCount"), 0, configPath);
 		if (nImg > 0)
 		{
 			WCHAR imgsPath[MAX_PATH];
 			GetPrivateProfileStringW(appName, L"ImagePath", L"", imgsPath, _countof(imgsPath), configPath);
 			thiz->m_elapse = GetPrivateProfileInt(appName, _T("Elapse"), 50, configPath);
-			thiz->m_x = GetPrivateProfileInt(appName, _T("X"), 0, configPath);
-			thiz->m_y = GetPrivateProfileInt(appName, _T("Y"), 0, configPath);
-			thiz->m_width = GetPrivateProfileInt(appName, _T("Width"), GetSystemMetrics(SM_CXSCREEN), configPath);
-			thiz->m_height = GetPrivateProfileInt(appName, _T("Height"), GetSystemMetrics(SM_CYSCREEN), configPath);
+			thiz->m_pos.x = GetPrivateProfileInt(appName, _T("X"), 0, configPath);
+			thiz->m_pos.y = GetPrivateProfileInt(appName, _T("Y"), 0, configPath);
+			thiz->m_size.cx = GetPrivateProfileInt(appName, _T("Width"), GetSystemMetrics(SM_CXSCREEN), configPath);
+			thiz->m_size.cy = GetPrivateProfileInt(appName, _T("Height"), GetSystemMetrics(SM_CYSCREEN), configPath);
 
 			// 载入位图
 			ULONG_PTR gdiplusToken = 0;
 			GdiplusStartupInput gdiplusStartupInput;
 			GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-			thiz->m_mdc = new MDC*[nImg];
+			thiz->m_mdc.resize(nImg);
 			for (int i = 0; i < nImg; i++)
 			{
 				WCHAR imgPath[MAX_PATH];
 				swprintf_s(imgPath, imgsPath, i + 1);
 				Image img(imgPath);
-				thiz->m_mdc[i] = new MDC(thiz->m_width, thiz->m_height);
-				Graphics graphics(*thiz->m_mdc[i]);
-				graphics.DrawImage(&img, 0, 0, thiz->m_width, thiz->m_height);
+				thiz->m_mdc[i].Create(thiz->m_size.cx, thiz->m_size.cy);
+				Graphics graphics(thiz->m_mdc[i]);
+				graphics.DrawImage(&img, 0, 0, thiz->m_size.cx, thiz->m_size.cy);
 			}
 			GdiplusShutdown(gdiplusToken);
 			thiz->m_nImg = nImg;
@@ -64,13 +70,7 @@ void CAnimatedDesktop::Uninit()
 
 	CCustomDesktop::Uninit();
 
-	if (m_mdc != NULL)
-	{
-		for (int i = 0; i < m_nImg; i++)
-			delete m_mdc[i];
-		delete[] m_mdc;
-		m_mdc = NULL;
-	}
+	m_mdc.clear();
 }
 
 VOID CAnimatedDesktop::TimerProc(HWND, UINT, UINT_PTR, DWORD)
@@ -81,9 +81,8 @@ VOID CAnimatedDesktop::TimerProc(HWND, UINT, UINT_PTR, DWORD)
 
 	if (++thiz->m_curFrame >= thiz->m_nImg)
 		thiz->m_curFrame = 0;
-	RECT rect = { thiz->m_x, thiz->m_y, thiz->m_x + thiz->m_width, thiz->m_y + thiz->m_height };
+	RECT rect = { thiz->m_pos.x, thiz->m_pos.y, thiz->m_pos.x + thiz->m_size.cx, thiz->m_pos.y + thiz->m_size.cy };
 	InvalidateRect(thiz->m_fileListWnd, &rect, TRUE);
-	UpdateWindow(thiz->m_fileListWnd);
 }
 
 void CAnimatedDesktop::OnDrawBackground(HDC hdc)
@@ -97,5 +96,5 @@ void CAnimatedDesktop::OnDrawBackground(HDC hdc)
 	bf.BlendFlags = 0;
 	bf.SourceConstantAlpha = 255;
 	bf.AlphaFormat = 1;
-	GdiAlphaBlend(hdc, m_x, m_y, m_width, m_height, *m_mdc[m_curFrame], 0, 0, m_width, m_height, bf);
+	GdiAlphaBlend(hdc, m_pos.x, m_pos.y, m_size.cx, m_size.cy, m_mdc[m_curFrame], 0, 0, m_size.cx, m_size.cy, bf);
 }
