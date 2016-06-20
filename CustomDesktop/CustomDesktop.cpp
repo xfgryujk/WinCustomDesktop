@@ -15,7 +15,7 @@ CCustomDesktop::CCustomDesktop() :
 
 CCustomDesktop::~CCustomDesktop()
 {
-	Uninit();
+	Uninit(); // 这时候子类已经被析构，Uninit被当做实函数，所以不会调用子类的Uninit！！
 }
 
 // 初始化，寻找窗口句柄
@@ -50,7 +50,7 @@ BOOL CCustomDesktop::Init(HWND fileListWnd)
 	m_parentWnd = GetParent(fileListWnd);
 	m_topWnd = GetParent(m_parentWnd);
 
-	m_oldWndProc = (WNDPROC)SetWindowLongPtr(m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)WndProc);
+	m_oldWndProc = (WNDPROC)SetWindowLongPtr(m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)ParentWndProc);
 	if (m_oldWndProc == NULL)
 	{
 		s_instance = NULL;
@@ -81,20 +81,26 @@ void CCustomDesktop::Uninit()
 	m_topWnd = m_parentWnd = m_fileListWnd = NULL;
 }
 
-// 静态窗口过程，传递WM_ERASEBKGND给动态的OnDrawBackground方法
-LRESULT CALLBACK CCustomDesktop::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+// 静态窗口过程，传递给动态窗口过程
+LRESULT CALLBACK CCustomDesktop::ParentWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	if (s_instance == NULL)
 		return 0;
 	CCustomDesktop* thiz = s_instance;
 
-	if (msg == WM_ERASEBKGND)
+	return thiz->OnParentWndProc(hwnd, message, wParam, lParam);
+}
+
+// 动态窗口过程，传递WM_ERASEBKGND给OnDrawBackground方法
+LRESULT CCustomDesktop::OnParentWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	if (message == WM_ERASEBKGND)
 	{
-		thiz->OnDrawBackground((HDC)wParam);
+		OnDrawBackground((HDC)wParam);
 		return 1;
 	}
 
-	return CallWindowProc(thiz->m_oldWndProc, hwnd, msg, wParam, lParam);
+	return CallWindowProc(m_oldWndProc, hwnd, message, wParam, lParam);
 }
 
 // 静态BeginPaint的hook，传递给动态的OnBeginPaint方法

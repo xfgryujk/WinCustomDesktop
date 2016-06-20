@@ -14,7 +14,7 @@ protected:
 
 private:
 	WNDPROC m_oldWndProc = NULL;
-	static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+	static LRESULT CALLBACK ParentWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 	typedef HDC (WINAPI* BeginPaintType)(HWND hWnd, LPPAINTSTRUCT lpPaint);
 	CIATHook<BeginPaintType> m_beginPaintHook;
@@ -25,6 +25,7 @@ private:
 	static BOOL WINAPI MyEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
 
 protected:
+	virtual LRESULT OnParentWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 	virtual void OnDrawBackground(HDC hdc);
 	virtual HDC OnBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
 	virtual BOOL OnEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
@@ -34,6 +35,7 @@ public:
 	virtual ~CCustomDesktop();
 
 	virtual BOOL Init();
-	virtual BOOL Init(HWND fileListWnd);
 	virtual void Uninit();
+protected:
+	virtual BOOL Init(HWND fileListWnd);
 };

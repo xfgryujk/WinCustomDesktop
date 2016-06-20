@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AnimatedDesktop.h" />
+    <ClInclude Include="BufferedDesktop.h" />
     <ClInclude Include="CustomDesktop.h" />
     <ClInclude Include="IATHook.h" />
     <ClInclude Include="MaskDesktop.h" />
@@ -153,6 +154,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AnimatedDesktop.cpp" />
+    <ClCompile Include="BufferedDesktop.cpp" />
     <ClCompile Include="CustomDesktop.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>

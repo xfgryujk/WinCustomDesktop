@@ -7,7 +7,7 @@ using namespace Gdiplus;
 
 CAnimatedDesktop::~CAnimatedDesktop()
 {
-	Uninit(); // 为什么在父类析构函数不会调用子类的Uninit？
+	Uninit();
 }
 
 BOOL CAnimatedDesktop::Init()

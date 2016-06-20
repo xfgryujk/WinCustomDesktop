@@ -35,7 +35,7 @@ protected:
 				if ((info->u1.Ordinal & IMAGE_ORDINAL_FLAG) == 0) // 是用函数名导入的
 				{
 					PIMAGE_IMPORT_BY_NAME name = (PIMAGE_IMPORT_BY_NAME)(hookModuleBase + info->u1.AddressOfData);
-					if (strcmp(name->Name, functionName) == 0)
+					if (strcmp((LPCSTR)name->Name, functionName) == 0)
 						return iat;
 				}
 			}

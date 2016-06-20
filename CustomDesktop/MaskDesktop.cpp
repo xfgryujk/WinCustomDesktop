@@ -7,12 +7,12 @@ using namespace Gdiplus;
 
 CMaskDesktop::~CMaskDesktop()
 {
-	Uninit(); // 为什么在父类析构函数不会调用子类的Uninit？
+	Uninit();
 }
 
 BOOL CMaskDesktop::Init()
 {
-	BOOL res = CCustomDesktop::Init();
+	BOOL res = CBufferedDesktop::Init();
 	if (!res)
 		return res;
 
@@ -41,13 +41,8 @@ BOOL CMaskDesktop::Init()
 		Image img(imgPath);
 		thiz->m_mdc.Create(thiz->m_size, thiz->m_size);
 		Graphics graphics(thiz->m_mdc);
-		graphics.DrawImage(&img, 0, 0, thiz->m_size, thiz->m_size);
+		graphics.DrawImage(&img, -5, -5, thiz->m_size + 10, thiz->m_size + 10);
 		GdiplusShutdown(gdiplusToken);
-
-		// 子类化
-		thiz->m_oldWndProc = (WNDPROC)SetWindowLongPtr(thiz->m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)WndProc);
-		if (thiz->m_oldWndProc == NULL)
-			thiz->Uninit();
 
 		InvalidateRect(thiz->m_fileListWnd, NULL, TRUE);
 	});
@@ -55,18 +50,10 @@ BOOL CMaskDesktop::Init()
 	return res;
 }
 
-void CMaskDesktop::Uninit()
-{
-	if (IsWindow(m_fileListWnd) && m_oldWndProc != NULL)
-		SetWindowLongPtr(m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldWndProc);
-
-	CCustomDesktop::Uninit();
-}
-
 BOOL CMaskDesktop::OnEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
 {
 	if ((HDC)m_mdc == NULL)
-		return CCustomDesktop::OnEndPaint(hWnd, lpPaint);
+		return CBufferedDesktop::OnEndPaint(hWnd, lpPaint);
 
 	BLENDFUNCTION bf;
 	bf.BlendOp = AC_SRC_OVER;
@@ -89,53 +76,49 @@ BOOL CMaskDesktop::OnEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
 	}
 	GdiplusShutdown(gdiplusToken);
 
-	return CCustomDesktop::OnEndPaint(hWnd, lpPaint);
+	return CBufferedDesktop::OnEndPaint(hWnd, lpPaint);
 }
 
-LRESULT CALLBACK CMaskDesktop::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CMaskDesktop::OnFileListWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	if (s_instance == NULL)
-		return 0;
-	CMaskDesktop* thiz = (CMaskDesktop*)s_instance;
-
 	switch (message)
 	{
-	case WM_DISPLAYCHANGE:
-		thiz->m_scrSize.cx = GetSystemMetrics(SM_CXSCREEN);
-		thiz->m_scrSize.cy = GetSystemMetrics(SM_CYSCREEN);
+	case WM_SIZE:
+		m_scrSize.cx = LOWORD(lParam);
+		m_scrSize.cy = HIWORD(lParam);
 		break;
 
 	case WM_MOUSEMOVE:
 	{
-		POINTS lastPos = thiz->m_curPos;
-		thiz->m_curPos = MAKEPOINTS(lParam);
+		POINTS lastPos = m_curPos;
+		m_curPos = MAKEPOINTS(lParam);
 
 		RECT rect;
-		if (thiz->m_curPos.x < lastPos.x)
+		if (m_curPos.x < lastPos.x)
 		{
-			rect.left = thiz->m_curPos.x - thiz->m_size / 2;
-			rect.right = lastPos.x + thiz->m_size / 2;
+			rect.left = m_curPos.x - m_size / 2 - 1;
+			rect.right = lastPos.x + m_size / 2 + 1;
 		}
 		else
 		{
-			rect.left = lastPos.x - thiz->m_size / 2;
-			rect.right = thiz->m_curPos.x + thiz->m_size / 2;
+			rect.left = lastPos.x - m_size / 2 - 1;
+			rect.right = m_curPos.x + m_size / 2 + 1;
 		}
-		if (thiz->m_curPos.y < lastPos.y)
+		if (m_curPos.y < lastPos.y)
 		{
-			rect.top = thiz->m_curPos.y - thiz->m_size / 2;
-			rect.bottom = lastPos.y + thiz->m_size / 2;
+			rect.top = m_curPos.y - m_size / 2 - 1;
+			rect.bottom = lastPos.y + m_size / 2 + 1;
 		}
 		else
 		{
-			rect.top = lastPos.y - thiz->m_size / 2;
-			rect.bottom = thiz->m_curPos.y + thiz->m_size / 2;
+			rect.top = lastPos.y - m_size / 2 - 1;
+			rect.bottom = m_curPos.y + m_size / 2 + 1;
 		}
-		InvalidateRect(thiz->m_fileListWnd, &rect, FALSE);
+		InvalidateRect(m_fileListWnd, &rect, FALSE);
 
 		break;
 	}
 	}
 
-	return CallWindowProc(thiz->m_oldWndProc, hwnd, message, wParam, lParam);
+	return CBufferedDesktop::OnFileListWndProc(hwnd, message, wParam, lParam);
 }
