@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="头文件\Helper">
+      <UniqueIdentifier>{7a461ee8-4194-4dde-97f0-d58c7220a129}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Helper">
+      <UniqueIdentifier>{9991c230-ba88-4003-922c-806e928bada8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -21,22 +27,28 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="CustomDesktop.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="AnimatedDesktop.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="IATHook.h">
+      <Filter>头文件\Helper</Filter>
     </ClInclude>
     <ClInclude Include="MDC.h">
+      <Filter>头文件\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="HookDesktop.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="IATHook.h">
+    <ClInclude Include="DesktopInfo.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="MaskDesktop.h">
+    <ClInclude Include="BufferedRendering.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="BufferedDesktop.h">
+    <ClInclude Include="Singleton.h">
+      <Filter>头文件\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="EventHelper.h">
+      <Filter>头文件\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="InternalEvents.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -44,22 +56,22 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="CustomDesktop.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="AnimatedDesktop.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="MDC.cpp">
+      <Filter>源文件\Helper</Filter>
+    </ClCompile>
+    <ClCompile Include="HookDesktop.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="MaskDesktop.cpp">
+    <ClCompile Include="DesktopInfo.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="BufferedDesktop.cpp">
+    <ClCompile Include="BufferedRendering.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="InternalEvents.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

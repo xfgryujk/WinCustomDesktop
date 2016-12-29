@@ -143,19 +143,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="AnimatedDesktop.h" />
-    <ClInclude Include="BufferedDesktop.h" />
-    <ClInclude Include="CustomDesktop.h" />
+    <ClInclude Include="BufferedRendering.h" />
+    <ClInclude Include="DesktopInfo.h" />
+    <ClInclude Include="EventHelper.h" />
+    <ClInclude Include="InternalEvents.h" />
+    <ClInclude Include="HookDesktop.h" />
     <ClInclude Include="IATHook.h" />
-    <ClInclude Include="MaskDesktop.h" />
     <ClInclude Include="MDC.h" />
+    <ClInclude Include="Singleton.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AnimatedDesktop.cpp" />
-    <ClCompile Include="BufferedDesktop.cpp" />
-    <ClCompile Include="CustomDesktop.cpp" />
+    <ClCompile Include="BufferedRendering.cpp" />
+    <ClCompile Include="DesktopInfo.cpp" />
+    <ClCompile Include="HookDesktop.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
@@ -170,7 +172,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="MaskDesktop.cpp" />
+    <ClCompile Include="InternalEvents.cpp" />
     <ClCompile Include="MDC.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

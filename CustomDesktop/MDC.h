@@ -1,18 +1,21 @@
 ﻿#pragma once
 
 
-class MDC
+namespace cd
 {
-public:
-	MDC() = default;
-	MDC(int width, int height);
-	~MDC();
+	class MDC final
+	{
+	private:
+		HBITMAP m_oldBmp = NULL;
+		HDC m_mdc = NULL;
 
-	BOOL Create(int width, int height, WORD biBitCount = 32);
-	void Release();
-	operator HDC ();
+	public:
+		MDC() = default;
+		MDC(int width, int height);
+		~MDC();
 
-private:
-	HBITMAP m_oldBmp = NULL;
-	HDC m_mdc = NULL;
-};
+		bool Create(int width, int height, WORD biBitCount = 32);
+		void Release();
+		operator HDC ();
+	};
+}

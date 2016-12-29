@@ -1,97 +1,126 @@
 ﻿#pragma once
 
 
-template<class FunctionType>
-class CIATHook
+namespace cd
 {
-protected:
-	FunctionType* m_importAddress = NULL;
-	FunctionType m_originalFunction = NULL;
-
-
-	FunctionType* findImportAddress(HANDLE hookModule, LPCSTR moduleName, LPCSTR functionName)
+	template<class FunctionType>
+	class CIATHook final
 	{
-		// 被hook的模块基址
-		uintptr_t hookModuleBase = (uintptr_t)hookModule;
-		PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)hookModuleBase;
-		PIMAGE_NT_HEADERS ntHeader = (PIMAGE_NT_HEADERS)(hookModuleBase + dosHeader->e_lfanew);
-		// 导入表
-		PIMAGE_IMPORT_DESCRIPTOR importTable = (PIMAGE_IMPORT_DESCRIPTOR)(hookModuleBase
-			+ ntHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
+	private:
+		FunctionType* m_importAddress = NULL;
+		const FunctionType m_hookFunction = NULL;
+		bool m_isEnabled = false;
 
-		// 遍历导入的模块
-		for (; importTable->Characteristics != 0; importTable++)
+
+		static FunctionType* FindImportAddress(HANDLE hookModule, LPCSTR moduleName, LPCSTR functionName)
 		{
-			// 不是函数所在模块
-			if (_stricmp((LPCSTR)(hookModuleBase + importTable->Name), moduleName) != 0)
-				continue;
+			// 被hook的模块基址
+			uintptr_t hookModuleBase = (uintptr_t)hookModule;
+			PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)hookModuleBase;
+			PIMAGE_NT_HEADERS ntHeader = (PIMAGE_NT_HEADERS)(hookModuleBase + dosHeader->e_lfanew);
+			// 导入表
+			PIMAGE_IMPORT_DESCRIPTOR importTable = (PIMAGE_IMPORT_DESCRIPTOR)(hookModuleBase
+				+ ntHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
 
-			PIMAGE_THUNK_DATA info = (PIMAGE_THUNK_DATA)(hookModuleBase + importTable->OriginalFirstThunk);
-			FunctionType* iat = (FunctionType*)(hookModuleBase + importTable->FirstThunk);
-
-			// 遍历导入的函数
-			for (; info->u1.AddressOfData != 0; info++, iat++)
+			// 遍历导入的模块
+			for (; importTable->Characteristics != 0; importTable++)
 			{
-				if ((info->u1.Ordinal & IMAGE_ORDINAL_FLAG) == 0) // 是用函数名导入的
+				// 不是函数所在模块
+				if (_stricmp((LPCSTR)(hookModuleBase + importTable->Name), moduleName) != 0)
+					continue;
+
+				PIMAGE_THUNK_DATA info = (PIMAGE_THUNK_DATA)(hookModuleBase + importTable->OriginalFirstThunk);
+				FunctionType* iat = (FunctionType*)(hookModuleBase + importTable->FirstThunk);
+
+				// 遍历导入的函数
+				for (; info->u1.AddressOfData != 0; info++, iat++)
 				{
-					PIMAGE_IMPORT_BY_NAME name = (PIMAGE_IMPORT_BY_NAME)(hookModuleBase + info->u1.AddressOfData);
-					if (strcmp((LPCSTR)name->Name, functionName) == 0)
-						return iat;
+					if ((info->u1.Ordinal & IMAGE_ORDINAL_FLAG) == 0) // 是用函数名导入的
+					{
+						PIMAGE_IMPORT_BY_NAME name = (PIMAGE_IMPORT_BY_NAME)(hookModuleBase + info->u1.AddressOfData);
+						if (strcmp((LPCSTR)name->Name, functionName) == 0)
+							return iat;
+					}
 				}
+
+				return NULL; // 没找到要hook的函数
 			}
 
-			return NULL; // 没找到要hook的函数
+			return NULL; // 没找到要hook的模块
 		}
 
-		return NULL; // 没找到要hook的模块
-	}
-
-public:
-	CIATHook(HANDLE hookModule, LPCSTR moduleName, LPCSTR functionName)
-	{
-		m_importAddress = findImportAddress(hookModule, moduleName, functionName);
-		// 保存原函数地址
-		if (m_importAddress != NULL)
-			m_originalFunction = *m_importAddress;
-	}
-
-	virtual ~CIATHook()
-	{
-		Unhook();
-	}
-
-
-	virtual BOOL Hook(FunctionType hookFunction)
-	{
-		if (m_importAddress == NULL)
-			return FALSE;
-
-		__try
+		bool ModifyIAT(FunctionType newFunction)
 		{
-			// 修改IAT中地址为hookFunction
-			DWORD oldProtect = 0, oldProtect2 = 0;
-			if (!VirtualProtect(m_importAddress, sizeof(FunctionType), PAGE_READWRITE, &oldProtect))
-				oldProtect = 0;
-			*m_importAddress = hookFunction;
-			VirtualProtect(m_importAddress, sizeof(FunctionType), oldProtect, &oldProtect2);
+			if (m_importAddress == NULL)
+				return false;
+
+			__try
+			{
+				// 修改IAT中地址为hookFunction
+				DWORD oldProtect = 0, oldProtect2 = 0;
+				if (!VirtualProtect(m_importAddress, sizeof(FunctionType), PAGE_READWRITE, &oldProtect))
+					oldProtect = 0;
+				*m_importAddress = newFunction;
+				VirtualProtect(m_importAddress, sizeof(FunctionType), oldProtect, &oldProtect2);
+			}
+			__except (GetExceptionCode() == STATUS_ACCESS_VIOLATION ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
+			{
+				return false;
+			}
+
+			return true;
 		}
-		__except (GetExceptionCode() == STATUS_ACCESS_VIOLATION ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
+
+	public:
+		const FunctionType m_oldEntry = NULL;
+
+
+		CIATHook(HANDLE hookModule, LPCSTR moduleName, LPCSTR functionName, FunctionType hookFunction, bool enable = true) :
+			m_importAddress(FindImportAddress(hookModule, moduleName, functionName)),
+			m_hookFunction(hookFunction), 
+			m_oldEntry(m_importAddress != NULL ? *m_importAddress : NULL)
 		{
-			return FALSE;
+			if (m_importAddress == NULL)
+				return;
+
+			if (enable)
+				Enable();
 		}
 
-		return TRUE;
-	}
-
-	virtual BOOL Unhook()
-	{
-		// 修改回原函数地址
-		return Hook(GetOriginalFunction());
-	}
+		~CIATHook()
+		{
+			Disable();
+		}
 
 
-	virtual FunctionType GetOriginalFunction()
-	{
-		return m_originalFunction;
-	}
-};
+		bool Enable()
+		{
+			if (m_isEnabled)
+				return true;
+			if (ModifyIAT(m_hookFunction))
+			{
+				m_isEnabled = true;
+				return true;
+			}
+			return false;
+		}
+
+		bool Disable()
+		{
+			if (!m_isEnabled)
+				return true;
+			if (ModifyIAT(m_oldEntry))
+			{
+				m_isEnabled = false;
+				return true;
+			}
+			return false;
+		}
+
+
+		bool IsEnabled()
+		{
+			return m_isEnabled;
+		}
+	};
+}
