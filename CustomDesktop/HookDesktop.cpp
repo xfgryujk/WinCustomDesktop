@@ -1,7 +1,7 @@
 ﻿#include "stdafx.h"
 #include "HookDesktop.h"
 #include "DesktopInfo.h"
-#include "InternalEvents.h"
+#include <CDEvents.h>
 
 
 namespace cd
@@ -31,8 +31,8 @@ namespace cd
 			return false;
 
 		// hook
-		m_beginPaintHook.Enable();
 		m_endPaintHook.Enable();
+		m_beginPaintHook.Enable();
 
 		m_hasInit = true;
 		return true;
@@ -45,6 +45,7 @@ namespace cd
 			return true;
 		m_hasInit = false;
 
+		// 子类化
 		if (IsWindow(g_desktopInfo.m_fileListWnd) && m_oldFileListWndProc != NULL)
 			SetWindowLongPtr(g_desktopInfo.m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldFileListWndProc);
 		if (IsWindow(g_desktopInfo.m_parentWnd) && m_oldParentWndProc != NULL)
@@ -54,8 +55,9 @@ namespace cd
 				InvalidateRect(g_desktopInfo.m_fileListWnd, NULL, TRUE);
 		}
 
-		m_endPaintHook.Disable();
+		// hook
 		m_beginPaintHook.Disable();
+		m_endPaintHook.Disable();
 
 		m_oldFileListWndProc = m_oldParentWndProc = NULL;
 
@@ -97,7 +99,7 @@ namespace cd
 	}
 
 	// 静态EndPaint的hook，传递给动态的OnEndPaint方法
-	BOOL WINAPI HookDesktop::MyEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
+	BOOL WINAPI HookDesktop::MyEndPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
 	{
 		auto& instance = HookDesktop::GetInstance();
 		if (hWnd == g_desktopInfo.m_fileListWnd)
@@ -108,6 +110,9 @@ namespace cd
 	// 动态文件列表窗口过程
 	LRESULT HookDesktop::OnFileListWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
+		if (!g_fileListWndProcEvent(message, wParam, lParam))
+			return 1;
+
 		switch (message)
 		{
 		case WM_SIZE:
@@ -121,10 +126,13 @@ namespace cd
 	// 动态父窗口过程
 	LRESULT HookDesktop::OnParentWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
+		if (!g_parentWndProcEvent(message, wParam, lParam))
+			return 1;
+
 		switch (message)
 		{
 		case WM_ERASEBKGND:
-			if (!g_onDrawBackgroundEvent((HDC)wParam))
+			if (!g_drawBackgroundEvent((HDC)wParam))
 				return 1;
 			break;
 		}
@@ -141,7 +149,7 @@ namespace cd
 	}
 
 	// 动态EndPaint的hook
-	BOOL HookDesktop::OnEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
+	BOOL HookDesktop::OnEndPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
 	{
 		g_fileListEndPaintEvent(lpPaint);
 		return m_endPaintHook.m_oldEntry(hWnd, lpPaint);

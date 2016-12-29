@@ -26,6 +26,6 @@ namespace cd
 
 		bool OnFileListWndSize(int width, int height);
 		bool OnFileListBeginPaint(LPPAINTSTRUCT lpPaint, HDC& res);
-		bool OnFileListEndPaint(CONST PAINTSTRUCT *lpPaint);
+		bool OnFileListEndPaint(LPPAINTSTRUCT lpPaint);
 	};
 }

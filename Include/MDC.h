@@ -1,9 +1,10 @@
 ﻿#pragma once
+#include "CDCommon.h"
 
 
 namespace cd
 {
-	class MDC final
+	class CD_API MDC final
 	{
 	private:
 		HBITMAP m_oldBmp = NULL;

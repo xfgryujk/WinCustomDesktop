@@ -1,7 +1,7 @@
 ﻿#include "stdafx.h"
 #include "BufferedRendering.h"
 #include "DesktopInfo.h"
-#include "InternalEvents.h"
+#include <CDEvents.h>
 
 
 namespace cd
@@ -60,11 +60,11 @@ namespace cd
 		return true;
 	}
 
-	bool BufferedRendering::OnFileListEndPaint(CONST PAINTSTRUCT *lpPaint)
+	bool BufferedRendering::OnFileListEndPaint(LPPAINTSTRUCT lpPaint)
 	{
 		if (lpPaint->hdc != NULL)
 		{
-			const_cast<PAINTSTRUCT*>(lpPaint)->hdc = m_originalDC;
+			lpPaint->hdc = m_originalDC;
 
 			BitBlt(lpPaint->hdc, lpPaint->rcPaint.left, lpPaint->rcPaint.top, lpPaint->rcPaint.right - lpPaint->rcPaint.left,
 				lpPaint->rcPaint.bottom - lpPaint->rcPaint.top, m_bufferDC, lpPaint->rcPaint.left, lpPaint->rcPaint.top, SRCCOPY);

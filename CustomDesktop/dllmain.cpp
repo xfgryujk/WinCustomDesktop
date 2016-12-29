@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "HookDesktop.h"
 #include "BufferedRendering.h"
+#include "CDAPIModule.h"
 using namespace cd;
 
 
@@ -18,6 +19,7 @@ namespace
 	{
 		InitModule(HookDesktop)
 		InitModule(BufferedRendering)
+		InitModule(CDAPIModule)
 		return true;
 	}
 }

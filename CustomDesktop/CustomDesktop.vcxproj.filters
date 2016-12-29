@@ -19,6 +19,18 @@
     <Filter Include="源文件\Helper">
       <UniqueIdentifier>{9991c230-ba88-4003-922c-806e928bada8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\API">
+      <UniqueIdentifier>{49f2b649-3004-4865-83c3-fca5b831d607}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\API">
+      <UniqueIdentifier>{45357134-a6ae-4416-a550-b97a1b665376}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Module">
+      <UniqueIdentifier>{8f10627a-1bf0-4e99-8199-d53f5a1e0f8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Module">
+      <UniqueIdentifier>{d3fc6086-9e93-447f-af58-2816804e8378}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -33,23 +45,29 @@
     <ClInclude Include="MDC.h">
       <Filter>头文件\Helper</Filter>
     </ClInclude>
-    <ClInclude Include="HookDesktop.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="DesktopInfo.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="BufferedRendering.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Singleton.h">
       <Filter>头文件\Helper</Filter>
     </ClInclude>
-    <ClInclude Include="EventHelper.h">
-      <Filter>头文件\Helper</Filter>
+    <ClInclude Include="..\Include\EventHelper.h">
+      <Filter>头文件\API</Filter>
     </ClInclude>
-    <ClInclude Include="InternalEvents.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="..\Include\CDEvents.h">
+      <Filter>头文件\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\CDAPI.h">
+      <Filter>头文件\API</Filter>
+    </ClInclude>
+    <ClInclude Include="BufferedRendering.h">
+      <Filter>头文件\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="HookDesktop.h">
+      <Filter>头文件\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="CDAPIModule.h">
+      <Filter>头文件\Module</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -65,14 +83,17 @@
     <ClCompile Include="HookDesktop.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="DesktopInfo.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="CDEvents.cpp">
+      <Filter>源文件\API</Filter>
+    </ClCompile>
+    <ClCompile Include="CDAPI.cpp">
+      <Filter>源文件\API</Filter>
     </ClCompile>
     <ClCompile Include="BufferedRendering.cpp">
-      <Filter>源文件</Filter>
+      <Filter>源文件\Module</Filter>
     </ClCompile>
-    <ClCompile Include="InternalEvents.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="DesktopInfo.cpp">
+      <Filter>源文件\Module</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

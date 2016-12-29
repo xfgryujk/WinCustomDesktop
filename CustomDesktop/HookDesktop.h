@@ -26,20 +26,18 @@ namespace cd
 		WNDPROC m_oldParentWndProc = NULL;
 
 		typedef HDC(WINAPI* BeginPaintType)(HWND hWnd, LPPAINTSTRUCT lpPaint);
-		typedef BOOL(WINAPI* EndPaintType)(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
+		typedef BOOL(WINAPI* EndPaintType)(HWND hWnd, LPPAINTSTRUCT lpPaint);
 		CIATHook<BeginPaintType> m_beginPaintHook;
 		CIATHook<EndPaintType> m_endPaintHook;
 
 		static LRESULT CALLBACK FileListWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK ParentWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 		static HDC WINAPI MyBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
-		static BOOL WINAPI MyEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
+		static BOOL WINAPI MyEndPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
 
 		LRESULT OnFileListWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 		LRESULT OnParentWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 		HDC OnBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
-		BOOL OnEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
-
-		LRESULT OnDrawBackground(HDC hdc);
+		BOOL OnEndPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
 	};
 }

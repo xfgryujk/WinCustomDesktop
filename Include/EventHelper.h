@@ -5,7 +5,7 @@
 
 namespace cd
 {
-	template<class... ArgTypes>
+	template<class KeyCmp, class... ArgTypes>
 	class Event final
 	{
 	public:
@@ -18,7 +18,7 @@ namespace cd
 			HMODULE m_module;
 		};
 
-		std::map<int, Listener> m_listeners;
+		std::map<int, Listener, KeyCmp> m_listeners;
 		int m_nextListenerID = 0;
 
 
@@ -58,4 +58,10 @@ namespace cd
 			return res;
 		}
 	};
+
+	template<class... ArgTypes>
+	using PreEvent = Event<std::less<int>, ArgTypes...>;
+
+	template<class... ArgTypes>
+	using PostEvent = Event<std::greater<int>, ArgTypes...>;
 }
