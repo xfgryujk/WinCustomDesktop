@@ -1,12 +1,12 @@
 ﻿#include "stdafx.h"
-#include "DesktopInfo.h"
+#include "Global.h"
 
 namespace cd
 {
-	CDesktopInfo& g_desktopInfo = CDesktopInfo::GetInstance();
+	Global& g_global = Global::GetInstance();
 
 
-	bool CDesktopInfo::Init()
+	bool Global::Init()
 	{
 		m_topWnd = FindWindow(_T("Progman"), _T("Program Manager"));
 		m_parentWnd = FindWindowEx(m_topWnd, NULL, _T("SHELLDLL_DefView"), _T(""));
@@ -22,7 +22,7 @@ namespace cd
 		return true;
 	}
 
-	CDesktopInfo::CDesktopInfo()
+	Global::Global()
 	{
 		Init();
 	}

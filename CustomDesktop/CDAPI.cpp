@@ -1,7 +1,7 @@
 ﻿#include "stdafx.h"
 #include <CDAPI.h>
 #include "CDAPIModule.h"
-#include "DesktopInfo.h"
+#include "Global.h"
 #include <CDEvents.h>
 
 
@@ -9,22 +9,22 @@ namespace cd
 {
 	CD_API HWND WINAPI GetTopHwnd()
 	{
-		return g_desktopInfo.m_topWnd;
+		return g_global.m_topWnd;
 	}
 
 	CD_API HWND WINAPI GetParentHwnd()
 	{
-		return g_desktopInfo.m_parentWnd;
+		return g_global.m_parentWnd;
 	}
 
 	CD_API HWND WINAPI GetFileListHwnd()
 	{
-		return g_desktopInfo.m_fileListWnd;
+		return g_global.m_fileListWnd;
 	}
 
 	CD_API void WINAPI GetWndSize(SIZE& size)
 	{
-		size = g_desktopInfo.m_wndSize;
+		size = g_global.m_wndSize;
 	}
 
 
@@ -38,7 +38,7 @@ namespace cd
 
 	CD_API void WINAPI ExecInMainThread(std::function<void()> function)
 	{
-		PostMessage(g_desktopInfo.m_fileListWnd, WM_EXEC_FUNCTION, (WPARAM)new std::function<void()>(std::move(function)), NULL);
+		PostMessage(g_global.m_fileListWnd, WM_EXEC_FUNCTION, (WPARAM)new std::function<void()>(std::move(function)), NULL);
 	}
 
 
@@ -46,7 +46,7 @@ namespace cd
 	{
 		if (message == WM_EXEC_FUNCTION)
 		{
-			(std::function<void()>(wParam))();
+			(*(std::function<void()>*)wParam)();
 			return false;
 		}
 		return true;

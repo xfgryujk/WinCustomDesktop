@@ -144,14 +144,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\Include\CDAPI.h" />
+    <ClInclude Include="..\Include\CDCommon.h" />
     <ClInclude Include="..\Include\CDEvents.h" />
     <ClInclude Include="..\Include\EventHelper.h" />
+    <ClInclude Include="..\Include\MDC.h" />
     <ClInclude Include="BufferedRendering.h" />
     <ClInclude Include="CDAPIModule.h" />
-    <ClInclude Include="DesktopInfo.h" />
+    <ClInclude Include="Global.h" />
     <ClInclude Include="HookDesktop.h" />
     <ClInclude Include="IATHook.h" />
-    <ClInclude Include="MDC.h" />
+    <ClInclude Include="PluginManager.h" />
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -159,7 +161,7 @@
   <ItemGroup>
     <ClCompile Include="BufferedRendering.cpp" />
     <ClCompile Include="CDAPI.cpp" />
-    <ClCompile Include="DesktopInfo.cpp" />
+    <ClCompile Include="Global.cpp" />
     <ClCompile Include="HookDesktop.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -177,6 +179,7 @@
     </ClCompile>
     <ClCompile Include="CDEvents.cpp" />
     <ClCompile Include="MDC.cpp" />
+    <ClCompile Include="PluginManager.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

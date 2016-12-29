@@ -5,8 +5,17 @@
 
 namespace cd
 {
+	class EventBase
+	{
+	public:
+		virtual ~EventBase() = default;
+
+		virtual void DeleteListener(int listenerID) = 0;
+		virtual void DeleteListenersOfModule(HMODULE module) = 0;
+	};
+
 	template<class KeyCmp, class... ArgTypes>
-	class Event final
+	class Event final : public EventBase
 	{
 	public:
 		typedef std::function<bool(ArgTypes...)> FunctionType;

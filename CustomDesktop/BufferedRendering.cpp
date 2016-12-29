@@ -1,6 +1,6 @@
 ﻿#include "stdafx.h"
 #include "BufferedRendering.h"
-#include "DesktopInfo.h"
+#include "Global.h"
 #include <CDEvents.h>
 
 
@@ -23,7 +23,7 @@ namespace cd
 			return true;
 
 		// 创建缓冲DC
-		if (!m_bufferDC.Create(g_desktopInfo.m_wndSize.cx, g_desktopInfo.m_wndSize.cy))
+		if (!m_bufferDC.Create(g_global.m_wndSize.cx, g_global.m_wndSize.cy))
 			return false;
 
 		// 监听事件

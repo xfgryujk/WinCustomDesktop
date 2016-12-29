@@ -42,12 +42,6 @@
     <ClInclude Include="IATHook.h">
       <Filter>头文件\Helper</Filter>
     </ClInclude>
-    <ClInclude Include="MDC.h">
-      <Filter>头文件\Helper</Filter>
-    </ClInclude>
-    <ClInclude Include="DesktopInfo.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Singleton.h">
       <Filter>头文件\Helper</Filter>
     </ClInclude>
@@ -69,6 +63,18 @@
     <ClInclude Include="CDAPIModule.h">
       <Filter>头文件\Module</Filter>
     </ClInclude>
+    <ClInclude Include="..\Include\CDCommon.h">
+      <Filter>头文件\API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\MDC.h">
+      <Filter>头文件\API</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginManager.h">
+      <Filter>头文件\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="Global.h">
+      <Filter>头文件\Module</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -76,9 +82,6 @@
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="MDC.cpp">
-      <Filter>源文件\Helper</Filter>
     </ClCompile>
     <ClCompile Include="HookDesktop.cpp">
       <Filter>源文件</Filter>
@@ -92,7 +95,13 @@
     <ClCompile Include="BufferedRendering.cpp">
       <Filter>源文件\Module</Filter>
     </ClCompile>
-    <ClCompile Include="DesktopInfo.cpp">
+    <ClCompile Include="MDC.cpp">
+      <Filter>源文件\API</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginManager.cpp">
+      <Filter>源文件\Module</Filter>
+    </ClCompile>
+    <ClCompile Include="Global.cpp">
       <Filter>源文件\Module</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,6 +1,6 @@
 ﻿#include "stdafx.h"
 #include "HookDesktop.h"
-#include "DesktopInfo.h"
+#include "Global.h"
 #include <CDEvents.h>
 
 
@@ -9,7 +9,7 @@ namespace cd
 	// 初始化，寻找窗口句柄
 	bool HookDesktop::Init()
 	{
-		return Init(g_desktopInfo.m_fileListWnd);
+		return Init(g_global.m_fileListWnd);
 	}
 
 	// 初始化，子类化窗口，hook
@@ -23,10 +23,10 @@ namespace cd
 			return false;
 
 		// 子类化
-		m_oldFileListWndProc = (WNDPROC)SetWindowLongPtr(g_desktopInfo.m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)FileListWndProc);
+		m_oldFileListWndProc = (WNDPROC)SetWindowLongPtr(g_global.m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)FileListWndProc);
 		if (m_oldFileListWndProc == NULL)
 			return false;
-		m_oldParentWndProc = (WNDPROC)SetWindowLongPtr(g_desktopInfo.m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)ParentWndProc);
+		m_oldParentWndProc = (WNDPROC)SetWindowLongPtr(g_global.m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)ParentWndProc);
 		if (m_oldParentWndProc == NULL)
 			return false;
 
@@ -46,13 +46,13 @@ namespace cd
 		m_hasInit = false;
 
 		// 子类化
-		if (IsWindow(g_desktopInfo.m_fileListWnd) && m_oldFileListWndProc != NULL)
-			SetWindowLongPtr(g_desktopInfo.m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldFileListWndProc);
-		if (IsWindow(g_desktopInfo.m_parentWnd) && m_oldParentWndProc != NULL)
+		if (IsWindow(g_global.m_fileListWnd) && m_oldFileListWndProc != NULL)
+			SetWindowLongPtr(g_global.m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldFileListWndProc);
+		if (IsWindow(g_global.m_parentWnd) && m_oldParentWndProc != NULL)
 		{
-			SetWindowLongPtr(g_desktopInfo.m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldParentWndProc);
-			if (IsWindow(g_desktopInfo.m_fileListWnd))
-				InvalidateRect(g_desktopInfo.m_fileListWnd, NULL, TRUE);
+			SetWindowLongPtr(g_global.m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldParentWndProc);
+			if (IsWindow(g_global.m_fileListWnd))
+				InvalidateRect(g_global.m_fileListWnd, NULL, TRUE);
 		}
 
 		// hook
@@ -93,7 +93,7 @@ namespace cd
 	HDC WINAPI HookDesktop::MyBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
 	{
 		auto& instance = HookDesktop::GetInstance();
-		if (hWnd == g_desktopInfo.m_fileListWnd)
+		if (hWnd == g_global.m_fileListWnd)
 			return instance.OnBeginPaint(hWnd, lpPaint);
 		return instance.m_beginPaintHook.m_oldEntry(hWnd, lpPaint);
 	}
@@ -102,7 +102,7 @@ namespace cd
 	BOOL WINAPI HookDesktop::MyEndPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
 	{
 		auto& instance = HookDesktop::GetInstance();
-		if (hWnd == g_desktopInfo.m_fileListWnd)
+		if (hWnd == g_global.m_fileListWnd)
 			return instance.OnEndPaint(hWnd, lpPaint);
 		return instance.m_endPaintHook.m_oldEntry(hWnd, lpPaint);
 	}
