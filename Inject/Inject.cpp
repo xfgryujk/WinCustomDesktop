@@ -5,6 +5,10 @@
 #include <tlhelp32.h>
 
 
+const UINT WM_PREUNLOAD = WM_APP + 99;
+
+
+
 // 提升进程特权，否则在XP中无法打开进程
 BOOL EnablePrivilege(BOOL enable)
 {
@@ -142,6 +146,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (remoteModule != NULL)
 	{
 		puts("卸载DLL");
+
+		// 发消息卸载所有插件
+		HWND hwnd = FindWindow(_T("Progman"), _T("Program Manager"));
+		hwnd = FindWindowEx(hwnd, NULL, _T("SHELLDLL_DefView"), _T(""));
+		hwnd = FindWindowEx(hwnd, NULL, _T("SysListView32"), _T("FolderView"));
+		SendMessage(hwnd, WM_PREUNLOAD, NULL, NULL);
 
 		FreeRemoteDll(process, remoteModule);
 	}

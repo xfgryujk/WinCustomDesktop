@@ -30,5 +30,8 @@ namespace cd
 		};
 
 		std::vector<Plugin> m_plugins;
+
+
+		bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam);
 	};
 }

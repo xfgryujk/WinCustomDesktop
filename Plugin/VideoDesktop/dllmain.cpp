@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include <memory>
 #include "VideoDesktop.h"
+#include <CDEvents.h>
 
 
 std::unique_ptr<VideoDesktop> g_videoDesktop;
@@ -16,10 +17,10 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	{
 	case DLL_PROCESS_ATTACH:
 		g_videoDesktop = std::make_unique<VideoDesktop>(hModule);
+		cd::g_preUnloadEvent.AddListener([]{ g_videoDesktop = nullptr; return true; }, hModule);
 		break;
 
 	case DLL_PROCESS_DETACH:
-		g_videoDesktop = nullptr;
 		break;
 
 	case DLL_THREAD_ATTACH:

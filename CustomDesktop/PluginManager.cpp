@@ -2,11 +2,16 @@
 #include "PluginManager.h"
 #include <EventHelper.h>
 #include "Global.h"
+#include <CDEvents.h>
+#include "HookDesktop.h"
 
 
 namespace cd
 {
 	extern std::vector<EventBase*> g_events;
+
+	// 准备卸载的消息
+	static const UINT WM_PREUNLOAD = WM_APP + 99;
 
 
 	bool PluginManager::LoadPlugin(LPCWSTR path)
@@ -56,11 +61,29 @@ namespace cd
 
 	PluginManager::PluginManager()
 	{
+		g_fileListWndProcEvent.AddListener(std::bind(&PluginManager::OnFileListWndProc, this, std::placeholders::_1, 
+			std::placeholders::_2, std::placeholders::_3));
+
 		LoadDir((g_global.m_cdDir + L"\\Plugin").c_str());
 	}
 
 	PluginManager::~PluginManager()
 	{
 		UnloadAll();
+	}
+
+
+	bool PluginManager::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam)
+	{
+		if (message == WM_PREUNLOAD)
+		{
+			g_preUnloadEvent();
+			// 卸载之前要释放所有插件否则卸载不掉
+			UnloadAll();
+			// 卸载hook防止崩溃
+			HookDesktop::GetInstance().Uninit();
+			return false;
+		}
+		return true;
 	}
 }
