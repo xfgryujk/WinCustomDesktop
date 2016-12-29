@@ -10,6 +10,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Inject", "Inject\Inject.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CustomDesktop", "CustomDesktop\CustomDesktop.vcxproj", "{760416AE-79C5-4778-BE97-18472B4E61BB}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugin", "Plugin", "{0C0E337E-7265-4D34-8B19-07E13A7C12CC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VideoDesktop", "Plugin\VideoDesktop\VideoDesktop.vcxproj", "{F30FC4D5-5134-4795-85EE-23962A6EDA14}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -34,8 +38,19 @@ Global
 		{760416AE-79C5-4778-BE97-18472B4E61BB}.Release|Win32.Build.0 = Release|Win32
 		{760416AE-79C5-4778-BE97-18472B4E61BB}.Release|x64.ActiveCfg = Release|x64
 		{760416AE-79C5-4778-BE97-18472B4E61BB}.Release|x64.Build.0 = Release|x64
+		{F30FC4D5-5134-4795-85EE-23962A6EDA14}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F30FC4D5-5134-4795-85EE-23962A6EDA14}.Debug|Win32.Build.0 = Debug|Win32
+		{F30FC4D5-5134-4795-85EE-23962A6EDA14}.Debug|x64.ActiveCfg = Debug|x64
+		{F30FC4D5-5134-4795-85EE-23962A6EDA14}.Debug|x64.Build.0 = Debug|x64
+		{F30FC4D5-5134-4795-85EE-23962A6EDA14}.Release|Win32.ActiveCfg = Release|Win32
+		{F30FC4D5-5134-4795-85EE-23962A6EDA14}.Release|Win32.Build.0 = Release|Win32
+		{F30FC4D5-5134-4795-85EE-23962A6EDA14}.Release|x64.ActiveCfg = Release|x64
+		{F30FC4D5-5134-4795-85EE-23962A6EDA14}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F30FC4D5-5134-4795-85EE-23962A6EDA14} = {0C0E337E-7265-4D34-8B19-07E13A7C12CC}
 	EndGlobalSection
 EndGlobal

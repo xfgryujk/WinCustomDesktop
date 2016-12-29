@@ -90,6 +90,8 @@ BOOL FreeRemoteDll(HANDLE process, HMODULE remoteModule)
 	DWORD result = 0;
 	if (!GetExitCodeThread(remoteThread, &result))
 		result = 0;
+	if (result == 0)
+		printf("卸载失败\n");
 
 	// 释放
 	CloseHandle(remoteThread);

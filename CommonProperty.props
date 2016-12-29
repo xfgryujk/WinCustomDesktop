@@ -5,6 +5,8 @@
   <PropertyGroup>
     <IncludePath>$(SolutionDir)Include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\Plugin\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link />

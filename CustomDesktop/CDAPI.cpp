@@ -30,7 +30,7 @@ namespace cd
 
 	CD_API UINT WINAPI GetCustomMessageID()
 	{
-		static UINT s_nextMsgID = WM_APP;
+		static UINT s_nextMsgID = WM_APP + 1000;
 		return s_nextMsgID++;
 	}
 
