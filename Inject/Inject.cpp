@@ -5,7 +5,7 @@
 #include <tlhelp32.h>
 
 
-const UINT WM_PREUNLOAD = WM_APP + 99;
+const UINT WM_PREUNLOAD = WM_APP + 999;
 
 
 

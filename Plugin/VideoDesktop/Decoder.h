@@ -16,7 +16,7 @@ public:
 	virtual void GetVideoSize(SIZE& size);
 
 	// 设置需要呈现时的回调函数
-	virtual void SetOnPresent(std::function<void(IMediaSample*)>&& onPresent);
+	virtual void SetOnPresent(std::function<void(IMediaSample*)> onPresent);
 
 protected:
 	CComPtr<IGraphBuilder> m_graph;

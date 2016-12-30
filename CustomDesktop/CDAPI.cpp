@@ -28,6 +28,11 @@ namespace cd
 	}
 
 
+	CD_API std::wstring WINAPI GetPluginDir()
+	{
+		return g_global.m_cdDir + L"Plugin\\";
+	}
+
 	CD_API UINT WINAPI GetCustomMessageID()
 	{
 		static UINT s_nextMsgID = WM_APP + 1000;

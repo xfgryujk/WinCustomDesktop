@@ -38,7 +38,7 @@ namespace cd
 		return true;
 	}
 
-	// 释放，貌似在不同线程，运气不好可能会崩溃...懒得加锁了
+	// 去子类化、hook
 	bool HookDesktop::Uninit()
 	{
 		if (!m_hasInit)

@@ -83,9 +83,6 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="HookDesktop.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="CDEvents.cpp">
       <Filter>源文件\API</Filter>
     </ClCompile>
@@ -102,6 +99,9 @@
       <Filter>源文件\Module</Filter>
     </ClCompile>
     <ClCompile Include="Global.cpp">
+      <Filter>源文件\Module</Filter>
+    </ClCompile>
+    <ClCompile Include="HookDesktop.cpp">
       <Filter>源文件\Module</Filter>
     </ClCompile>
   </ItemGroup>

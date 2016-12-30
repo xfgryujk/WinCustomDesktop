@@ -7,11 +7,11 @@ CDecoder::CDecoder(LPCWSTR fileName, HRESULT* phr) :
 {
 	AddRef(); // 防止多次析构
 
-	*phr = m_graph.CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER);
-	*phr = m_graph.QueryInterface(&m_control);
+	if (FAILED(*phr = m_graph.CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER))) return;
+	if (FAILED(*phr = m_graph.QueryInterface(&m_control))) return;
 
-	*phr = m_graph->AddFilter(this, L"Renderer");
-	*phr = m_graph->AddSourceFilter(fileName, L"Source", &m_source);
+	if (FAILED(*phr = m_graph->AddFilter(this, L"Renderer"))) return;
+	if (FAILED(*phr = m_graph->AddSourceFilter(fileName, L"Source", &m_source))) return;
 
 	// 连接源和渲染器
 	CComPtr<IEnumPins> enumPins;
@@ -19,21 +19,20 @@ CDecoder::CDecoder(LPCWSTR fileName, HRESULT* phr) :
 	CBasePin* rendererPin = GetPin(0);
 	PIN_DIRECTION pinDir;
 
-	m_source->EnumPins(&enumPins);
+	if (FAILED(*phr = m_source->EnumPins(&enumPins))) return;
 	while (enumPins->Next(1, &sourcePin, NULL) == S_OK)
 	{
-		sourcePin->QueryDirection(&pinDir);
-		if (pinDir == PINDIR_OUTPUT)
+		if (SUCCEEDED(sourcePin->QueryDirection(&pinDir)) && pinDir == PINDIR_OUTPUT)
 			break;
 		sourcePin.Release();
 	}
 	enumPins.Release();
 
-	*phr = m_graph->Connect(sourcePin, rendererPin);
+	if (FAILED(*phr = m_graph->Connect(sourcePin, rendererPin))) return;
 
 	// 获取视频尺寸
 	CMediaType mediaType;
-	*phr = rendererPin->ConnectionMediaType(&mediaType);
+	if (FAILED(*phr = rendererPin->ConnectionMediaType(&mediaType))) return;
 	if (mediaType.formattype == FORMAT_VideoInfo)
 	{
 		VIDEOINFOHEADER* info = (VIDEOINFOHEADER*)mediaType.pbFormat;
@@ -45,21 +44,26 @@ CDecoder::CDecoder(LPCWSTR fileName, HRESULT* phr) :
 		m_videoSize.cx = 800;
 		m_videoSize.cy = 600;
 	}
+
+	*phr = S_OK;
 }
 
 void CDecoder::RunVideo()
 {
-	HRESULT hr = m_control->Run();
+	if (m_control.p != NULL)
+		m_control->Run();
 }
 
 void CDecoder::PauseVideo()
 {
-	HRESULT hr = m_control->Pause();
+	if (m_control.p != NULL)
+		m_control->Pause();
 }
 
 void CDecoder::StopVideo()
 {
-	HRESULT hr = m_control->Stop();
+	if (m_control.p != NULL)
+		m_control->Stop();
 }
 
 void CDecoder::GetVideoSize(SIZE& size)
@@ -67,7 +71,7 @@ void CDecoder::GetVideoSize(SIZE& size)
 	size = m_videoSize;
 }
 
-void CDecoder::SetOnPresent(std::function<void(IMediaSample*)>&& onPresent)
+void CDecoder::SetOnPresent(std::function<void(IMediaSample*)> onPresent)
 {
 	m_onPresent = std::move(onPresent);
 }

@@ -2,6 +2,7 @@
 #include "VideoDesktop.h"
 #include <CDEvents.h>
 #include <CDAPI.h>
+#include "VDConfig.h"
 
 
 VideoDesktop::VideoDesktop(HMODULE hModule) : 
@@ -13,7 +14,13 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 	cd::ExecInMainThread([this]{
 		// 初始化解码器
 		HRESULT hr;
-		m_decoder = std::make_unique<CDecoder>(L"E:\\Bad Apple.avi", &hr);
+		m_decoder = std::make_unique<CDecoder>(g_config.m_videoPath.c_str(), &hr);
+		if (FAILED(hr))
+		{
+			MessageBox(NULL, _T("加载视频失败！"), APPNAME, MB_ICONERROR);
+			return;
+		}
+
 		m_decoder->SetOnPresent(std::bind(&VideoDesktop::OnPresent, this, std::placeholders::_1));
 
 		m_decoder->GetVideoSize(m_videoSize);
@@ -32,11 +39,16 @@ VideoDesktop::~VideoDesktop()
 
 bool VideoDesktop::OnDrawBackground(HDC hdc)
 {
+	// 抗锯齿
+	int oldMode = SetStretchBltMode(hdc, HALFTONE);
+
 	SIZE size;
 	cd::GetWndSize(size);
 	m_dcLock.lock();
 	StretchBlt(hdc, 0, 0, size.cx, size.cy, m_dc, 0, 0, m_videoSize.cx, m_videoSize.cy, SRCCOPY);
 	m_dcLock.unlock();
+
+	SetStretchBltMode(hdc, oldMode);
 	return false;
 }
 

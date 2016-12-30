@@ -5,11 +5,16 @@
 #include "BufferedRendering.h"
 #include "CDAPIModule.h"
 #include "PluginManager.h"
+#include <CDEvents.h>
 using namespace cd;
 
 
 namespace
 {
+	// 准备卸载的消息
+	static const UINT WM_PREUNLOAD = WM_APP + 999;
+
+
 #define InitModule(module) \
 	if (!module::GetInstance().IsReady()) \
 	{ \
@@ -32,6 +37,20 @@ namespace
 		InitModule(BufferedRendering)
 		InitModule(CDAPIModule)
 		InitModule(PluginManager)
+
+		g_fileListWndProcEvent.AddListener([](UINT message, WPARAM wParam, LPARAM lParam){
+			if (message == WM_PREUNLOAD)
+			{
+				g_preUnloadEvent();
+				// 卸载之前要释放所有插件否则卸载不掉
+				PluginManager::GetInstance().UnloadAll();
+				// 卸载hook防止崩溃
+				HookDesktop::GetInstance().Uninit();
+				return false;
+			}
+			return true;
+		});
+
 		return true;
 	}
 }
