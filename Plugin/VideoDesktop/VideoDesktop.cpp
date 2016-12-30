@@ -12,28 +12,28 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 	cd::g_drawBackgroundEvent.AddListener(std::bind(&VideoDesktop::OnDrawBackground, this, std::placeholders::_1), m_module);
 
 	cd::ExecInMainThread([this]{
-		// 初始化解码器
+		// 初始化播放器
 		HRESULT hr;
-		m_decoder = std::make_unique<CDecoder>(g_config.m_videoPath.c_str(), &hr);
+		m_player = std::make_unique<VideoPlayer>(g_config.m_videoPath.c_str(), &hr);
 		if (FAILED(hr))
 		{
 			MessageBox(NULL, _T("加载视频失败！"), APPNAME, MB_ICONERROR);
 			return;
 		}
 
-		m_decoder->SetOnPresent(std::bind(&VideoDesktop::OnPresent, this, std::placeholders::_1));
+		m_player->SetOnPresent(std::bind(&VideoDesktop::OnPresent, this, std::placeholders::_1));
 
-		m_decoder->GetVideoSize(m_videoSize);
+		m_player->GetVideoSize(m_videoSize);
 		m_dc.Create(m_videoSize.cx, m_videoSize.cy, 32);
 
-		m_decoder->RunVideo();
+		m_player->RunVideo();
 	});
 }
 
 VideoDesktop::~VideoDesktop()
 {
-	if (m_decoder != nullptr)
-		m_decoder->StopVideo();
+	if (m_player != nullptr)
+		m_player->StopVideo();
 }
 
 

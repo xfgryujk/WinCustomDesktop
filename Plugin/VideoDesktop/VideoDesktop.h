@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Decoder.h"
+#include "VideoPlayer.h"
 #include <memory>
 #include <MDC.h>
 #include <mutex>
@@ -14,7 +14,7 @@ public:
 private:
 	HMODULE m_module;
 
-	std::unique_ptr<CDecoder> m_decoder;
+	std::unique_ptr<VideoPlayer> m_player;
 	SIZE m_videoSize;
 
 	cd::MDC m_dc;

@@ -3,11 +3,11 @@
 #include <functional>
 
 
-class CDecoder : private CBaseVideoRenderer
+class VideoPlayer : private CBaseVideoRenderer
 {
 public:
-	CDecoder(LPCWSTR fileName, HRESULT* phr);
-	virtual ~CDecoder() = default;
+	VideoPlayer(LPCWSTR fileName, HRESULT* phr);
+	virtual ~VideoPlayer() = default;
 
 	virtual void RunVideo();
 	virtual void PauseVideo();
@@ -22,6 +22,7 @@ protected:
 	CComPtr<IGraphBuilder> m_graph;
 	CComPtr<IMediaControl> m_control;
 	CComPtr<IBaseFilter> m_source;
+	CComPtr<IBaseFilter> m_audioRenderer;
 
 	SIZE m_videoSize;
 	// 需要呈现时被调用
