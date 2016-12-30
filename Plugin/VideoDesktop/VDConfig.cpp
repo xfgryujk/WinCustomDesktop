@@ -19,4 +19,6 @@ void VDConfig::LoadConfig(LPCWSTR path)
 	GetPrivateProfileStringW(APPNAME, L"VideoPath", L"", (LPWSTR)strBuf.c_str(), (DWORD)strBuf.size(), path);
 	strBuf.resize(wcslen(strBuf.c_str()));
 	m_videoPath = std::move(strBuf);
+
+	m_volume = GetPrivateProfileIntW(APPNAME, L"Volume", m_volume, path);
 }

@@ -17,10 +17,12 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 		m_player = std::make_unique<VideoPlayer>(g_config.m_videoPath.c_str(), &hr);
 		if (FAILED(hr))
 		{
+			m_player = nullptr;
 			MessageBox(NULL, _T("加载视频失败！"), APPNAME, MB_ICONERROR);
 			return;
 		}
 
+		m_player->SetVolume(g_config.m_volume - 100);
 		m_player->SetOnPresent(std::bind(&VideoDesktop::OnPresent, this, std::placeholders::_1));
 
 		m_player->GetVideoSize(m_videoSize);
