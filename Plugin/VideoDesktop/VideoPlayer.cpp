@@ -9,6 +9,9 @@ VideoPlayer::VideoPlayer(LPCWSTR fileName, HRESULT* phr) :
 
 	if (FAILED(*phr = m_graph.CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER))) return;
 	if (FAILED(*phr = m_graph.QueryInterface(&m_control))) return;
+	if (FAILED(*phr = m_graph.QueryInterface(&m_seeking))) return;
+	m_seeking->SetTimeFormat(&TIME_FORMAT_FRAME);
+	if (FAILED(*phr = m_graph.QueryInterface(&m_event))) return;
 	if (FAILED(*phr = m_graph.QueryInterface(&m_basicAudio))) return;
 	if (FAILED(*phr = m_audioRenderer.CoCreateInstance(CLSID_DSoundRender, NULL, CLSCTX_INPROC_SERVER))
 		&& FAILED(*phr = m_audioRenderer.CoCreateInstance(CLSID_AudioRender, NULL, CLSCTX_INPROC_SERVER))) return;
@@ -54,6 +57,11 @@ VideoPlayer::VideoPlayer(LPCWSTR fileName, HRESULT* phr) :
 	*phr = S_OK;
 }
 
+VideoPlayer::~VideoPlayer()
+{
+	StopVideo();
+}
+
 
 void VideoPlayer::RunVideo()
 {
@@ -73,6 +81,12 @@ void VideoPlayer::StopVideo()
 		m_control->Stop();
 }
 
+void VideoPlayer::SeekVideo(LONGLONG pos)
+{
+	if (m_seeking.p != NULL)
+		m_seeking->SetPositions(&pos, AM_SEEKING_AbsolutePositioning | AM_SEEKING_NoFlush, NULL, AM_SEEKING_NoPositioning);
+}
+
 
 void VideoPlayer::GetVideoSize(SIZE& size)
 {
@@ -81,6 +95,8 @@ void VideoPlayer::GetVideoSize(SIZE& size)
 
 int VideoPlayer::GetVolume()
 {
+	if (m_basicAudio.p == NULL)
+		return 0;
 	long volume = 0;
 	if (SUCCEEDED(m_basicAudio->get_Volume(&volume)))
 		return volume / 100;
@@ -89,6 +105,8 @@ int VideoPlayer::GetVolume()
 
 void VideoPlayer::SetVolume(int volume)
 {
+	if (m_basicAudio.p == NULL)
+		return;
 	if (volume < -100)
 		volume = -100;
 	else if (volume > 0)
@@ -100,6 +118,13 @@ void VideoPlayer::SetVolume(int volume)
 void VideoPlayer::SetOnPresent(std::function<void(IMediaSample*)> onPresent)
 {
 	m_onPresent = std::move(onPresent);
+}
+
+void VideoPlayer::SetNotifyWindow(HWND hwnd, UINT messageID)
+{
+	if (m_event.p == NULL)
+		return;
+	m_event->SetNotifyWindow((OAHWND)hwnd, messageID, (LONG_PTR)m_event.p);
 }
 
 

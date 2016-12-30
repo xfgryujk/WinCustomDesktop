@@ -9,18 +9,26 @@ class VideoDesktop final
 {
 public:
 	VideoDesktop(HMODULE hModule);
-	~VideoDesktop();
+	~VideoDesktop() = default;
 
 private:
 	HMODULE m_module;
 
-	std::unique_ptr<VideoPlayer> m_player;
+	const UINT WM_GRAPHNOTIFY;
+	// 实现无缝跳转
+	std::unique_ptr<VideoPlayer> m_players[2];
+	VideoPlayer* m_curPlayer;
+	int m_curPlayerIndex = 0;
 	SIZE m_videoSize;
 
 	cd::MDC m_dc;
 	std::mutex m_dcLock;
 
 
+	bool InitPlayer(std::unique_ptr<VideoPlayer>& player);
+
 	bool OnDrawBackground(HDC hdc);
 	void OnPresent(IMediaSample* mediaSample);
+
+	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam);
 };

@@ -6,36 +6,45 @@
 
 
 VideoDesktop::VideoDesktop(HMODULE hModule) : 
-	m_module(hModule)
+	m_module(hModule), 
+	WM_GRAPHNOTIFY(cd::GetCustomMessageID())
 {
 	// 监听事件
 	cd::g_drawBackgroundEvent.AddListener(std::bind(&VideoDesktop::OnDrawBackground, this, std::placeholders::_1), m_module);
+	cd::g_fileListWndProcEvent.AddListener(std::bind(&VideoDesktop::OnFileListWndProc, this, std::placeholders::_1,
+		std::placeholders::_2, std::placeholders::_3), m_module);
 
 	cd::ExecInMainThread([this]{
 		// 初始化播放器
-		HRESULT hr;
-		m_player = std::make_unique<VideoPlayer>(g_config.m_videoPath.c_str(), &hr);
-		if (FAILED(hr))
+		for (auto& player : m_players)
 		{
-			m_player = nullptr;
-			MessageBox(NULL, _T("加载视频失败！"), APPNAME, MB_ICONERROR);
-			return;
+			if (!InitPlayer(player))
+				return;
 		}
+		m_curPlayer = m_players[m_curPlayerIndex].get();
 
-		m_player->SetVolume(g_config.m_volume - 100);
-		m_player->SetOnPresent(std::bind(&VideoDesktop::OnPresent, this, std::placeholders::_1));
-
-		m_player->GetVideoSize(m_videoSize);
+		m_curPlayer->GetVideoSize(m_videoSize);
 		m_dc.Create(m_videoSize.cx, m_videoSize.cy, 32);
 
-		m_player->RunVideo();
+		m_curPlayer->RunVideo();
 	});
 }
 
-VideoDesktop::~VideoDesktop()
+bool VideoDesktop::InitPlayer(std::unique_ptr<VideoPlayer>& player)
 {
-	if (m_player != nullptr)
-		m_player->StopVideo();
+	HRESULT hr;
+	player = std::make_unique<VideoPlayer>(g_config.m_videoPath.c_str(), &hr);
+	if (FAILED(hr))
+	{
+		player = nullptr;
+		MessageBox(NULL, _T("加载视频失败！"), APPNAME, MB_ICONERROR);
+		return false;
+	}
+
+	player->SetVolume(g_config.m_volume - 100);
+	player->SetOnPresent(std::bind(&VideoDesktop::OnPresent, this, std::placeholders::_1));
+	player->SetNotifyWindow(cd::GetFileListHwnd(), WM_GRAPHNOTIFY);
+	return true;
 }
 
 
@@ -68,4 +77,34 @@ void VideoDesktop::OnPresent(IMediaSample* mediaSample)
 	m_dcLock.unlock();
 
 	InvalidateRect(cd::GetFileListHwnd(), NULL, FALSE);
+}
+
+
+bool VideoDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	if (message == WM_GRAPHNOTIFY)
+	{
+		auto event = (IMediaEventEx*)lParam;
+		long eventCode;
+		LONG_PTR lParam1, lParam2;
+		while (SUCCEEDED(event->GetEvent(&eventCode, &lParam1, &lParam2, 0)))
+		{
+			if (FAILED(event->FreeEventParams(eventCode, lParam1, lParam2)))
+				break;
+			// 播放完毕
+			if (eventCode == EC_COMPLETE)
+			{
+				int prevPlayerIndex = m_curPlayerIndex;
+				if (++m_curPlayerIndex >= _countof(m_players))
+					m_curPlayerIndex = 0;
+				m_curPlayer = m_players[m_curPlayerIndex].get();
+				m_curPlayer->RunVideo();
+				if (!InitPlayer(m_players[prevPlayerIndex]))
+					m_curPlayer->StopVideo();
+				break; // event已被释放
+			}
+		}
+		return false;
+	}
+	return true;
 }
