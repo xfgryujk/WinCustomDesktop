@@ -13,6 +13,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugin", "Plugin", "{0C0E337E-7265-4D34-8B19-07E13A7C12CC}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VideoDesktop", "Plugin\VideoDesktop\VideoDesktop.vcxproj", "{F30FC4D5-5134-4795-85EE-23962A6EDA14}"
+	ProjectSection(ProjectDependencies) = postProject
+		{760416AE-79C5-4778-BE97-18472B4E61BB} = {760416AE-79C5-4778-BE97-18472B4E61BB}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MaskDesktop", "Plugin\MaskDesktop\MaskDesktop.vcxproj", "{19CA8F52-9A5A-4F64-8700-57D670E9F9D9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{760416AE-79C5-4778-BE97-18472B4E61BB} = {760416AE-79C5-4778-BE97-18472B4E61BB}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,11 +54,20 @@ Global
 		{F30FC4D5-5134-4795-85EE-23962A6EDA14}.Release|Win32.Build.0 = Release|Win32
 		{F30FC4D5-5134-4795-85EE-23962A6EDA14}.Release|x64.ActiveCfg = Release|x64
 		{F30FC4D5-5134-4795-85EE-23962A6EDA14}.Release|x64.Build.0 = Release|x64
+		{19CA8F52-9A5A-4F64-8700-57D670E9F9D9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{19CA8F52-9A5A-4F64-8700-57D670E9F9D9}.Debug|Win32.Build.0 = Debug|Win32
+		{19CA8F52-9A5A-4F64-8700-57D670E9F9D9}.Debug|x64.ActiveCfg = Debug|x64
+		{19CA8F52-9A5A-4F64-8700-57D670E9F9D9}.Debug|x64.Build.0 = Debug|x64
+		{19CA8F52-9A5A-4F64-8700-57D670E9F9D9}.Release|Win32.ActiveCfg = Release|Win32
+		{19CA8F52-9A5A-4F64-8700-57D670E9F9D9}.Release|Win32.Build.0 = Release|Win32
+		{19CA8F52-9A5A-4F64-8700-57D670E9F9D9}.Release|x64.ActiveCfg = Release|x64
+		{19CA8F52-9A5A-4F64-8700-57D670E9F9D9}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F30FC4D5-5134-4795-85EE-23962A6EDA14} = {0C0E337E-7265-4D34-8B19-07E13A7C12CC}
+		{19CA8F52-9A5A-4F64-8700-57D670E9F9D9} = {0C0E337E-7265-4D34-8B19-07E13A7C12CC}
 	EndGlobalSection
 EndGlobal
