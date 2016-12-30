@@ -16,10 +16,12 @@ MaskDesktop::MaskDesktop(HMODULE hModule) :
 		ULONG_PTR gdiplusToken = 0;
 		GdiplusStartupInput gdiplusStartupInput;
 		GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-		Image img(g_config.m_imagePath.c_str());
-		m_mdc.Create(g_config.m_size, g_config.m_size);
-		Graphics graphics(m_mdc);
-		graphics.DrawImage(&img, -5, -5, g_config.m_size + 10, g_config.m_size + 10);
+		{
+			Image img(g_config.m_imagePath.c_str());
+			m_mdc.Create(g_config.m_size, g_config.m_size);
+			Graphics graphics(m_mdc);
+			graphics.DrawImage(&img, -5, -5, g_config.m_size + 10, g_config.m_size + 10);
+		}
 		GdiplusShutdown(gdiplusToken);
 
 		cd::GetWndSize(m_scrSize);

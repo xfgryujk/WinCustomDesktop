@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "VideoPlayer.h"
+#include <Dvdmedia.h>
 
 
 VideoPlayer::VideoPlayer(LPCWSTR fileName, HRESULT* phr) :
@@ -48,10 +49,16 @@ VideoPlayer::VideoPlayer(LPCWSTR fileName, HRESULT* phr) :
 		m_videoSize.cx = info->bmiHeader.biWidth;
 		m_videoSize.cy = info->bmiHeader.biHeight;
 	}
+	else if (mediaType.formattype == FORMAT_VideoInfo2)
+	{
+		VIDEOINFOHEADER2* info = (VIDEOINFOHEADER2*)mediaType.pbFormat;
+		m_videoSize.cx = info->bmiHeader.biWidth;
+		m_videoSize.cy = info->bmiHeader.biHeight;
+	}
 	else
 	{
-		m_videoSize.cx = 800;
-		m_videoSize.cy = 600;
+		*phr = E_UNEXPECTED;
+		return;
 	}
 
 	*phr = S_OK;
@@ -59,6 +66,7 @@ VideoPlayer::VideoPlayer(LPCWSTR fileName, HRESULT* phr) :
 
 VideoPlayer::~VideoPlayer()
 {
+	SetNotifyWindow(NULL, 0);
 	StopVideo();
 }
 

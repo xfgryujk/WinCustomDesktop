@@ -69,11 +69,13 @@ void VideoDesktop::OnPresent(IMediaSample* mediaSample)
 	if (FAILED(mediaSample->GetPointer(&sampleBuf)))
 		return;
 
-	// 假设每行之间没有多余的字节
-	//ASSERT(mediaSample->GetActualDataLength() == m_videoSize.cx * m_videoSize.cy * 4);
+	if (mediaSample->GetActualDataLength() < m_videoSize.cx * m_videoSize.cy * 4)
+		return;
+	size_t size = min(mediaSample->GetActualDataLength(), m_videoSize.cx * m_videoSize.cy * 4);
+
 	m_dcLock.lock();
 	// RGB位图都是从下到上储存的
-	memcpy(m_dc.GetPixelAddress(0, m_videoSize.cy - 1), sampleBuf, m_videoSize.cx * m_videoSize.cy * 4);
+	memcpy(m_dc.GetPixelAddress(0, m_videoSize.cy - 1), sampleBuf, size);
 	m_dcLock.unlock();
 
 	InvalidateRect(cd::GetFileListHwnd(), NULL, FALSE);

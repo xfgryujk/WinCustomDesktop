@@ -1,5 +1,6 @@
 ﻿// dllmain.cpp : 定义 DLL 应用程序的入口点。
 #include "stdafx.h"
+#include <Dbghelp.h>
 #include "Global.h"
 #include "HookDesktop.h"
 #include "BufferedRendering.h"
@@ -13,6 +14,26 @@ namespace
 {
 	// 准备卸载的消息
 	static const UINT WM_PREUNLOAD = WM_APP + 999;
+
+
+	LPTOP_LEVEL_EXCEPTION_FILTER g_oldExceptionHandler = NULL;
+
+	// 异常处理
+	LONG WINAPI ExceptionHandler(_EXCEPTION_POINTERS* ExceptionInfo)
+	{
+		HANDLE file = CreateFileW((g_global.m_cdDir + L"exception.dmp").c_str(), GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (file != INVALID_HANDLE_VALUE)
+		{
+			MINIDUMP_EXCEPTION_INFORMATION einfo;
+			einfo.ThreadId = GetCurrentThreadId();
+			einfo.ExceptionPointers = ExceptionInfo;
+			einfo.ClientPointers = FALSE;
+			MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), file, MiniDumpWithIndirectlyReferencedMemory,
+				&einfo, NULL, NULL);
+			CloseHandle(file);
+		}
+		return EXCEPTION_EXECUTE_HANDLER;
+	}
 
 
 #define InitModule(module) \
@@ -63,11 +84,13 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
+		g_oldExceptionHandler = SetUnhandledExceptionFilter(ExceptionHandler);
 		if (!InitModules(hModule))
 			return FALSE;
 		break;
 
 	case DLL_PROCESS_DETACH:
+		SetUnhandledExceptionFilter(g_oldExceptionHandler);
 		break;
 
 	case DLL_THREAD_ATTACH:

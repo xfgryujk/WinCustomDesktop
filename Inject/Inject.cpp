@@ -69,6 +69,8 @@ HMODULE InjectDll(HANDLE process, LPCTSTR dllPath)
 	// 取DLL在目标进程的句柄
 	if (!GetExitCodeThread(remoteThread, &remoteModule))
 		remoteModule = 0;
+	if (remoteModule == 0)
+		printf("注入失败\n");
 
 	// 释放
 	CloseHandle(remoteThread);
