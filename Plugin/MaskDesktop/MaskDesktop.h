@@ -12,7 +12,6 @@ private:
 
 	cd::MDC m_mdc;
 	POINTS m_curPos;
-	SIZE m_scrSize;
 
 
 	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam);

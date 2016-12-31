@@ -2,40 +2,49 @@
 #include "HookDesktop.h"
 #include "Global.h"
 #include <CDEvents.h>
+#include <CDAPI.h>
 
 
 namespace cd
 {
-	// 初始化，寻找窗口句柄
+	// 初始化，子类化窗口，hook
 	bool HookDesktop::Init()
 	{
-		return Init(g_global.m_fileListWnd);
-	}
-
-	// 初始化，子类化窗口，hook
-	bool HookDesktop::Init(HWND fileListWnd)
-	{
-		if (m_hasInit)
-			return true;
-		if (!IsWindow(fileListWnd))
-			return false;
-		if (GetModuleHandle(_T("explorer.exe")) == NULL)
-			return false;
+		if (m_hasInit) return true;
+		if (GetModuleHandle(_T("explorer.exe")) == NULL) return false;
 
 		// 子类化
 		m_oldFileListWndProc = (WNDPROC)SetWindowLongPtr(g_global.m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)FileListWndProc);
-		if (m_oldFileListWndProc == NULL)
-			return false;
+		if (m_oldFileListWndProc == NULL) goto SubclassingFileListWndFiled;
 		m_oldParentWndProc = (WNDPROC)SetWindowLongPtr(g_global.m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)ParentWndProc);
-		if (m_oldParentWndProc == NULL)
-			return false;
+		if (m_oldParentWndProc == NULL) goto SubclassingParentWndFiled;
 
 		// hook
-		m_endPaintHook.Enable();
-		m_beginPaintHook.Enable();
+		if (g_global.m_comctlModules.empty()) goto NoComctlModule;
+		for (const auto& module : g_global.m_comctlModules)
+		{
+			CIATHook<BeginPaintType> beginPaintHook(module, "user32.dll", "BeginPaint", MyBeginPaint);
+			if (!beginPaintHook.IsEnabled()) goto HookFailed;
+			m_beginPaintHooks.push_back(std::move(beginPaintHook));
+			CIATHook<EndPaintType> endPaintHook(module, "user32.dll", "EndPaint", MyEndPaint);
+			if (!endPaintHook.IsEnabled()) goto HookFailed;
+			m_endPaintHooks.push_back(std::move(endPaintHook));
+		}
 
 		m_hasInit = true;
 		return true;
+
+	HookFailed:
+		m_beginPaintHooks.clear();
+		m_endPaintHooks.clear();
+	NoComctlModule:
+		SetWindowLongPtr(g_global.m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldParentWndProc);
+		m_oldParentWndProc = NULL;
+	SubclassingParentWndFiled:
+		SetWindowLongPtr(g_global.m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldFileListWndProc);
+		m_oldFileListWndProc = NULL;
+	SubclassingFileListWndFiled:
+		return false;
 	}
 
 	// 去子类化、hook
@@ -49,24 +58,19 @@ namespace cd
 		if (IsWindow(g_global.m_fileListWnd) && m_oldFileListWndProc != NULL)
 			SetWindowLongPtr(g_global.m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldFileListWndProc);
 		if (IsWindow(g_global.m_parentWnd) && m_oldParentWndProc != NULL)
-		{
 			SetWindowLongPtr(g_global.m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldParentWndProc);
-			if (IsWindow(g_global.m_fileListWnd))
-				InvalidateRect(g_global.m_fileListWnd, NULL, TRUE);
-		}
+		RedrawDesktop();
 
 		// hook
-		m_beginPaintHook.Disable();
-		m_endPaintHook.Disable();
+		m_beginPaintHooks.clear();
+		m_endPaintHooks.clear();
 
 		m_oldFileListWndProc = m_oldParentWndProc = NULL;
 
 		return true;
 	}
 
-	HookDesktop::HookDesktop() :
-		m_beginPaintHook(GetModuleHandle(_T("comctl32.dll")), "user32.dll", "BeginPaint", MyBeginPaint, false),
-		m_endPaintHook(GetModuleHandle(_T("comctl32.dll")), "user32.dll", "EndPaint", MyEndPaint, false)
+	HookDesktop::HookDesktop()
 	{
 		Init();
 	}
@@ -92,19 +96,17 @@ namespace cd
 	// 静态BeginPaint的hook，传递给动态的OnBeginPaint方法
 	HDC WINAPI HookDesktop::MyBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
 	{
-		auto& instance = HookDesktop::GetInstance();
 		if (hWnd == g_global.m_fileListWnd)
-			return instance.OnBeginPaint(hWnd, lpPaint);
-		return instance.m_beginPaintHook.m_oldEntry(hWnd, lpPaint);
+			return HookDesktop::GetInstance().OnBeginPaint(hWnd, lpPaint);
+		return BeginPaint(hWnd, lpPaint);
 	}
 
 	// 静态EndPaint的hook，传递给动态的OnEndPaint方法
 	BOOL WINAPI HookDesktop::MyEndPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
 	{
-		auto& instance = HookDesktop::GetInstance();
 		if (hWnd == g_global.m_fileListWnd)
-			return instance.OnEndPaint(hWnd, lpPaint);
-		return instance.m_endPaintHook.m_oldEntry(hWnd, lpPaint);
+			return HookDesktop::GetInstance().OnEndPaint(hWnd, lpPaint);
+		return EndPaint(hWnd, lpPaint);
 	}
 
 	// 动态文件列表窗口过程
@@ -116,7 +118,8 @@ namespace cd
 		switch (message)
 		{
 		case WM_SIZE:
-			g_fileListWndSizeEvent(LOWORD(lParam), HIWORD(lParam));
+			g_global.m_wndSize = { LOWORD(lParam), HIWORD(lParam) };
+			g_fileListWndSizeEvent(g_global.m_wndSize.cx, g_global.m_wndSize.cy);
 			break;
 		}
 
@@ -132,7 +135,7 @@ namespace cd
 		switch (message)
 		{
 		case WM_ERASEBKGND:
-			if (!g_drawBackgroundEvent((HDC)wParam))
+			if (!g_drawBackgroundEvent((HDC&)wParam, m_isInBeginPaint))
 				return 1;
 			break;
 		}
@@ -143,7 +146,9 @@ namespace cd
 	// 动态BeginPaint的hook
 	HDC HookDesktop::OnBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
 	{
-		HDC res = m_beginPaintHook.m_oldEntry(hWnd, lpPaint);
+		m_isInBeginPaint = true;
+		HDC res = BeginPaint(hWnd, lpPaint);
+		m_isInBeginPaint = false;
 		g_fileListBeginPaintEvent(lpPaint, res);
 		return res;
 	}
@@ -152,6 +157,6 @@ namespace cd
 	BOOL HookDesktop::OnEndPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
 	{
 		g_fileListEndPaintEvent(lpPaint);
-		return m_endPaintHook.m_oldEntry(hWnd, lpPaint);
+		return EndPaint(hWnd, lpPaint);
 	}
 }

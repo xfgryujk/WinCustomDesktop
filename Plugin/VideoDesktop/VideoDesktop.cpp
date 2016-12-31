@@ -10,7 +10,8 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 	WM_GRAPHNOTIFY(cd::GetCustomMessageID())
 {
 	// 监听事件
-	cd::g_drawBackgroundEvent.AddListener(std::bind(&VideoDesktop::OnDrawBackground, this, std::placeholders::_1), m_module);
+	cd::g_drawBackgroundEvent.AddListener(std::bind(&VideoDesktop::OnDrawBackground, this, std::placeholders::_1, 
+		std::placeholders::_2), m_module);
 	cd::g_fileListWndProcEvent.AddListener(std::bind(&VideoDesktop::OnFileListWndProc, this, std::placeholders::_1,
 		std::placeholders::_2, std::placeholders::_3), m_module);
 
@@ -48,13 +49,16 @@ bool VideoDesktop::InitPlayer(std::unique_ptr<VideoPlayer>& player)
 }
 
 
-bool VideoDesktop::OnDrawBackground(HDC hdc)
+bool VideoDesktop::OnDrawBackground(HDC& hdc, bool isInBeginPaint)
 {
+	if ((HDC)m_dc == NULL)
+		return true;
+
 	// 抗锯齿
 	int oldMode = SetStretchBltMode(hdc, HALFTONE);
 
 	SIZE size;
-	cd::GetWndSize(size);
+	cd::GetDesktopSize(size);
 	m_dcLock.lock();
 	StretchBlt(hdc, 0, 0, size.cx, size.cy, m_dc, 0, 0, m_videoSize.cx, m_videoSize.cy, SRCCOPY);
 	m_dcLock.unlock();
@@ -78,7 +82,7 @@ void VideoDesktop::OnPresent(IMediaSample* mediaSample)
 	memcpy(m_dc.GetPixelAddress(0, m_videoSize.cy - 1), sampleBuf, size);
 	m_dcLock.unlock();
 
-	InvalidateRect(cd::GetFileListHwnd(), NULL, FALSE);
+	cd::RedrawDesktop();
 }
 
 

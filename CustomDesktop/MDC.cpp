@@ -2,7 +2,7 @@
 //
 
 #include "stdafx.h"
-#include "MDC.h"
+#include <MDC.h>
 
 
 namespace cd

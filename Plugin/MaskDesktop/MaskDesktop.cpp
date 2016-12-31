@@ -24,18 +24,12 @@ MaskDesktop::MaskDesktop(HMODULE hModule) :
 		}
 		GdiplusShutdown(gdiplusToken);
 
-		cd::GetWndSize(m_scrSize);
-
 		// 监听事件
-		cd::g_fileListWndSizeEvent.AddListener([this](int width, int height){
-			m_scrSize = { width, height };
-			return true;
-		}, m_module);
 		cd::g_fileListWndProcEvent.AddListener(std::bind(&MaskDesktop::OnFileListWndProc, this, std::placeholders::_1, 
 			std::placeholders::_2, std::placeholders::_3), m_module);
 		cd::g_fileListEndPaintEvent.AddListener(std::bind(&MaskDesktop::OnFileListEndPaint, this, std::placeholders::_1), m_module);
 
-		InvalidateRect(cd::GetFileListHwnd(), NULL, TRUE);
+		cd::RedrawDesktop();
 	});
 }
 
@@ -69,7 +63,7 @@ bool MaskDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam)
 			rect.bottom = m_curPos.y + g_config.m_size / 2 + 1;
 		}
 
-		InvalidateRect(cd::GetFileListHwnd(), &rect, TRUE);
+		cd::RedrawDesktop(&rect);
 	}
 	return true;
 }
@@ -88,14 +82,16 @@ bool MaskDesktop::OnFileListEndPaint(LPPAINTSTRUCT lpPaint)
 		, m_mdc, 0, 0, g_config.m_size, g_config.m_size, bf);
 
 	HBRUSH brush = (HBRUSH)GetStockObject(BLACK_BRUSH);
+	SIZE scrSize;
+	cd::GetDesktopSize(scrSize);
 	RECT rect;
-	rect = { 0, 0, m_curPos.x - g_config.m_size / 2 + 1, m_scrSize.cy };
+	rect = { 0, 0, m_curPos.x - g_config.m_size / 2 + 1, scrSize.cy };
 	FillRect(lpPaint->hdc, &rect, brush);
 	rect = { m_curPos.x - g_config.m_size / 2 + 1, 0, m_curPos.x + g_config.m_size / 2 - 1, m_curPos.y - g_config.m_size / 2 + 1 };
 	FillRect(lpPaint->hdc, &rect, brush);
-	rect = { m_curPos.x + g_config.m_size / 2 - 1, 0, m_scrSize.cx, m_scrSize.cy };
+	rect = { m_curPos.x + g_config.m_size / 2 - 1, 0, scrSize.cx, scrSize.cy };
 	FillRect(lpPaint->hdc, &rect, brush);
-	rect = { m_curPos.x - g_config.m_size / 2 + 1, m_curPos.y + g_config.m_size / 2 - 1, m_curPos.x + g_config.m_size / 2 - 1, m_scrSize.cy };
+	rect = { m_curPos.x - g_config.m_size / 2 + 1, m_curPos.y + g_config.m_size / 2 - 1, m_curPos.x + g_config.m_size / 2 - 1, scrSize.cy };
 	FillRect(lpPaint->hdc, &rect, brush);
 
 	return true;

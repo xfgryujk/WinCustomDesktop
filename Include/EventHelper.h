@@ -68,9 +68,11 @@ namespace cd
 		}
 	};
 
+	// 先监听先被调用
 	template<class... ArgTypes>
 	using PreEvent = Event<std::less<int>, ArgTypes...>;
 
+	// 先监听后被调用
 	template<class... ArgTypes>
 	using PostEvent = Event<std::greater<int>, ArgTypes...>;
 }

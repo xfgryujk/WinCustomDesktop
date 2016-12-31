@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Singleton.h"
 #include <string>
+#include <vector>
 
 
 namespace cd
@@ -12,8 +13,10 @@ namespace cd
 		HWND m_topWnd = NULL;
 		HWND m_parentWnd = NULL;
 		HWND m_fileListWnd = NULL;
-
 		SIZE m_wndSize;
+
+		// XP有两个comctl32，所以需要获取所有comctl32句柄
+		std::vector<HMODULE> m_comctlModules;
 
 		HMODULE m_cdModule = NULL;
 		std::wstring m_cdDir;

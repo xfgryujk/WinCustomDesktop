@@ -23,13 +23,16 @@ namespace cd
 			return true;
 
 		// 创建缓冲DC
-		if (!m_bufferDC.Create(g_global.m_wndSize.cx, g_global.m_wndSize.cy))
+		if (!m_bufferDC.Create(g_global.m_wndSize.cx, g_global.m_wndSize.cy, 24))
 			return false;
 
 		// 监听事件
-		g_fileListWndSizeEvent.AddListener(std::bind(&BufferedRendering::OnFileListWndSize, this, std::placeholders::_1, std::placeholders::_2));
+		g_fileListWndSizeEvent.AddListener([this](int width, int height){ m_bufferDC.Create(width, height); return true; });
 		g_fileListBeginPaintEvent.AddListener(std::bind(&BufferedRendering::OnFileListBeginPaint, this, std::placeholders::_1, std::placeholders::_2));
 		g_fileListEndPaintEvent.AddListener(std::bind(&BufferedRendering::OnFileListEndPaint, this, std::placeholders::_1));
+		// 防止XP下BeginPaint擦除背景造成闪烁
+		// 但是替换掉dc后XP下WM_ERASEBKGND画不了背景？？
+		//g_drawBackgroundEvent.AddListener([this](HDC& hdc, bool isInBeginPaint){ if (isInBeginPaint) hdc = m_bufferDC; return true; });
 
 		m_hasInit = true;
 		return true;
@@ -43,19 +46,15 @@ namespace cd
 		return true;
 	}
 
-
-	bool BufferedRendering::OnFileListWndSize(int width, int height)
-	{
-		m_bufferDC.Create(width, height);
-		return true;
-	}
-
 	bool BufferedRendering::OnFileListBeginPaint(LPPAINTSTRUCT lpPaint, HDC& res)
 	{
 		if (res != NULL)
 		{
 			m_originalDC = res;
 			res = lpPaint->hdc = m_bufferDC;
+
+			BitBlt(m_bufferDC, lpPaint->rcPaint.left, lpPaint->rcPaint.top, lpPaint->rcPaint.right - lpPaint->rcPaint.left,
+				lpPaint->rcPaint.bottom - lpPaint->rcPaint.top, m_originalDC, lpPaint->rcPaint.left, lpPaint->rcPaint.top, SRCCOPY);
 		}
 		return true;
 	}
@@ -64,10 +63,10 @@ namespace cd
 	{
 		if (lpPaint->hdc != NULL)
 		{
-			lpPaint->hdc = m_originalDC;
-
-			BitBlt(lpPaint->hdc, lpPaint->rcPaint.left, lpPaint->rcPaint.top, lpPaint->rcPaint.right - lpPaint->rcPaint.left,
+			BitBlt(m_originalDC, lpPaint->rcPaint.left, lpPaint->rcPaint.top, lpPaint->rcPaint.right - lpPaint->rcPaint.left,
 				lpPaint->rcPaint.bottom - lpPaint->rcPaint.top, m_bufferDC, lpPaint->rcPaint.left, lpPaint->rcPaint.top, SRCCOPY);
+
+			lpPaint->hdc = m_originalDC;
 		}
 		return true;
 	}

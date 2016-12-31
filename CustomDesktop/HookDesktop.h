@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Singleton.h"
 #include "IATHook.h"
+#include <vector>
 
 
 namespace cd
@@ -12,7 +13,6 @@ namespace cd
 		bool IsReady() { return m_hasInit; }
 
 		bool Init();
-		bool Init(HWND fileListWnd);
 		bool Uninit();
 
 	private:
@@ -27,8 +27,8 @@ namespace cd
 
 		typedef HDC(WINAPI* BeginPaintType)(HWND hWnd, LPPAINTSTRUCT lpPaint);
 		typedef BOOL(WINAPI* EndPaintType)(HWND hWnd, LPPAINTSTRUCT lpPaint);
-		CIATHook<BeginPaintType> m_beginPaintHook;
-		CIATHook<EndPaintType> m_endPaintHook;
+		std::vector<CIATHook<BeginPaintType> > m_beginPaintHooks;
+		std::vector<CIATHook<EndPaintType> > m_endPaintHooks;
 
 		static LRESULT CALLBACK FileListWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK ParentWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -39,5 +39,8 @@ namespace cd
 		LRESULT OnParentWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 		HDC OnBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
 		BOOL OnEndPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
+
+
+		bool m_isInBeginPaint = false;
 	};
 }

@@ -24,7 +24,6 @@ namespace cd
 		HDC m_originalDC = NULL;
 		MDC m_bufferDC;
 
-		bool OnFileListWndSize(int width, int height);
 		bool OnFileListBeginPaint(LPPAINTSTRUCT lpPaint, HDC& res);
 		bool OnFileListEndPaint(LPPAINTSTRUCT lpPaint);
 	};

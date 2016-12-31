@@ -87,6 +87,16 @@ namespace cd
 				Enable();
 		}
 
+		CIATHook(CIATHook& other) :
+			m_importAddress(other.m_importAddress),
+			m_hookFunction(other.m_hookFunction),
+			m_isEnabled(other.m_isEnabled),
+			m_oldEntry(other.m_oldEntry)
+		{
+			other.m_importAddress = NULL;
+			other.m_isEnabled = false;
+		}
+
 		~CIATHook()
 		{
 			Disable();

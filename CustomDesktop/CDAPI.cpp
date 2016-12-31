@@ -22,9 +22,14 @@ namespace cd
 		return g_global.m_fileListWnd;
 	}
 
-	CD_API void WINAPI GetWndSize(SIZE& size)
+	CD_API void WINAPI GetDesktopSize(SIZE& size)
 	{
 		size = g_global.m_wndSize;
+	}
+
+	CD_API void WINAPI RedrawDesktop(const RECT* rect)
+	{
+		RedrawWindow(g_global.m_fileListWnd, rect, NULL, RDW_ERASE | RDW_INVALIDATE);
 	}
 
 
@@ -51,8 +56,13 @@ namespace cd
 	{
 		if (message == WM_EXEC_FUNCTION)
 		{
-			(*(std::function<void()>*)wParam)();
-			return false;
+			auto* function = (std::function<void()>*)wParam;
+			if (function != NULL)
+			{
+				(*function)();
+				delete function;
+				return false;
+			}
 		}
 		return true;
 	}

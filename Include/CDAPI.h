@@ -9,7 +9,8 @@ namespace cd
 	CD_API HWND WINAPI GetTopHwnd();
 	CD_API HWND WINAPI GetParentHwnd();
 	CD_API HWND WINAPI GetFileListHwnd();
-	CD_API void WINAPI GetWndSize(SIZE& size);
+	CD_API void WINAPI GetDesktopSize(SIZE& size);
+	CD_API void WINAPI RedrawDesktop(const RECT* rect = NULL);
 
 	CD_API std::wstring WINAPI GetPluginDir();
 	// 在FileList窗口过程中分配一个唯一的消息ID
