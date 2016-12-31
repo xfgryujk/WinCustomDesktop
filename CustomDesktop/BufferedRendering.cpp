@@ -32,7 +32,19 @@ namespace cd
 		g_fileListEndPaintEvent.AddListener(std::bind(&BufferedRendering::OnFileListEndPaint, this, std::placeholders::_1));
 		// 防止XP下BeginPaint擦除背景造成闪烁
 		// 但是替换掉dc后XP下WM_ERASEBKGND画不了背景？？
-		//g_drawBackgroundEvent.AddListener([this](HDC& hdc, bool isInBeginPaint){ if (isInBeginPaint) hdc = m_bufferDC; return true; });
+		// XP下画桌面用PaintDesktop，但是无法画到内存DC
+		// http://www.progtown.com/topic247718-gdi-misunderstanding-of-operation-paintdesktop.html
+		// > You cannot PaintDesktop into a memory DC because PaintDesktop does an EnumDisplayMonitors 
+		// to render the desktop on each monitor, but a memory DC does not have any monitors.
+		// 还是自己读取壁纸再画吧 HKCU/Control Panel/Desktop/Wallpaper
+		g_drawBackgroundEvent.AddListener([this](HDC& hdc, bool isInBeginPaint){
+			if (isInBeginPaint)
+			{
+				hdc = m_bufferDC;
+				return false;
+			}
+			return true;
+		});
 
 		m_hasInit = true;
 		return true;
