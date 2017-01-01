@@ -17,6 +17,7 @@ namespace cd
 		RECT rect;
 		if (!GetClientRect(m_fileListWnd, &rect)) return false;
 		m_wndSize = { rect.right - rect.left, rect.bottom - rect.top };
+		m_screenSize = { GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
 
 		DWORD size = 0;
 		if (!EnumProcessModules(GetCurrentProcess(), NULL, 0, &size)) return false;

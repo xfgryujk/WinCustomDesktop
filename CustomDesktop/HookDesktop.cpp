@@ -119,6 +119,7 @@ namespace cd
 		{
 		case WM_SIZE:
 			g_global.m_wndSize = { LOWORD(lParam), HIWORD(lParam) };
+			g_global.m_screenSize = { GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
 			g_fileListWndSizeEvent(g_global.m_wndSize.cx, g_global.m_wndSize.cy);
 			break;
 		}
@@ -135,6 +136,7 @@ namespace cd
 		switch (message)
 		{
 		case WM_ERASEBKGND:
+			// 只有XP下BeginPaint才会擦除背景
 			if (!g_drawBackgroundEvent((HDC&)wParam, m_isInBeginPaint))
 				return 1;
 			break;

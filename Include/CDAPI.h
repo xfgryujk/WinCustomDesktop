@@ -10,6 +10,7 @@ namespace cd
 	CD_API HWND WINAPI GetParentHwnd();
 	CD_API HWND WINAPI GetFileListHwnd();
 	CD_API void WINAPI GetDesktopSize(SIZE& size);
+	CD_API void WINAPI GetScreenSize(SIZE& size);
 	CD_API void WINAPI RedrawDesktop(const RECT* rect = NULL);
 
 	CD_API std::wstring WINAPI GetPluginDir();

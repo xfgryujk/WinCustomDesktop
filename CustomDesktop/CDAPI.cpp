@@ -27,6 +27,11 @@ namespace cd
 		size = g_global.m_wndSize;
 	}
 
+	CD_API void WINAPI GetScreenSize(SIZE& size)
+	{
+		size = g_global.m_screenSize;
+	}
+
 	CD_API void WINAPI RedrawDesktop(const RECT* rect)
 	{
 		RedrawWindow(g_global.m_fileListWnd, rect, NULL, RDW_ERASE | RDW_INVALIDATE);

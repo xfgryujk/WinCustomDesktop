@@ -23,7 +23,11 @@ namespace cd
 
 		HDC m_originalDC = NULL;
 		MDC m_bufferDC;
+		MDC m_wallpaperDC;
 
+		void InitWallpaperDC();
+
+		bool OnDrawBackground(HDC& hdc, bool isInBeginPaint);
 		bool OnFileListBeginPaint(LPPAINTSTRUCT lpPaint, HDC& res);
 		bool OnFileListEndPaint(LPPAINTSTRUCT lpPaint);
 	};

@@ -85,13 +85,26 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	{
 	case DLL_PROCESS_ATTACH:
 		g_oldExceptionHandler = SetUnhandledExceptionFilter(ExceptionHandler);
+#ifdef _DEBUG
+		AllocConsole();
+		_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
+		_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG | _CRTDBG_MODE_FILE);
+#endif
+
 		if (!InitModules(hModule))
 			return FALSE;
+
 		break;
 
+
 	case DLL_PROCESS_DETACH:
+#ifdef _DEBUG
+		FreeConsole();
+#endif
 		SetUnhandledExceptionFilter(g_oldExceptionHandler);
+
 		break;
+
 
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:

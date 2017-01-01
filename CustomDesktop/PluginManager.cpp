@@ -13,11 +13,16 @@ namespace cd
 
 	bool PluginManager::LoadPlugin(LPCWSTR path)
 	{
+		_RPTFW1(_CRT_WARN, L"加载MOD：%s\n", path);
+
 		Plugin plugin;
 		plugin.m_path = path;
 		plugin.m_module = LoadLibraryW(path);
 		if (plugin.m_module == NULL)
+		{
+			_RPTFW1(_CRT_ERROR, L"加载MOD失败：%s\n", path);
 			return false;
+		}
 
 		m_plugins.push_back(std::move(plugin));
 		return true;
@@ -39,6 +44,8 @@ namespace cd
 	bool PluginManager::UnloadPlugin(int index)
 	{
 		auto& plugin = m_plugins[index];
+		_RPTFW1(_CRT_WARN, L"卸载MOD：%s\n", plugin.m_path.c_str());
+
 		for (auto i : g_events)
 			i->DeleteListenersOfModule(plugin.m_module);
 		if (!FreeLibrary(plugin.m_module))
