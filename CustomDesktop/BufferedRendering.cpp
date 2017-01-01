@@ -3,9 +3,6 @@
 #include "Global.h"
 #include <CDEvents.h>
 #include <CDAPI.h>
-#include <comdef.h>
-#include <gdiplus.h>
-using namespace Gdiplus;
 
 
 namespace cd
@@ -27,14 +24,15 @@ namespace cd
 			return true;
 
 		// 创建缓冲DC
-		if (!m_bufferDC.Create(g_global.m_wndSize.cx, g_global.m_wndSize.cy, 24))
+		if (!m_bufferImg.Create(g_global.m_wndSize.cx, g_global.m_wndSize.cy, 24))
 			return false;
+		m_bufferDC = m_bufferImg.GetDC();
 
 		// 创建壁纸DC
 		InitWallpaperDC();
 
 		// 监听事件
-		g_fileListWndSizeEvent.AddListener([this](int width, int height){ m_bufferDC.Create(width, height); InitWallpaperDC(); return true; });
+		g_fileListWndSizeEvent.AddListener(std::bind(&BufferedRendering::OnFileListWndSize, this, std::placeholders::_1, std::placeholders::_2));
 		g_fileListBeginPaintEvent.AddListener(std::bind(&BufferedRendering::OnFileListBeginPaint, this, std::placeholders::_1, std::placeholders::_2));
 		g_fileListEndPaintEvent.AddListener(std::bind(&BufferedRendering::OnFileListEndPaint, this, std::placeholders::_1));
 		g_drawBackgroundEvent.AddListener(std::bind(&BufferedRendering::OnDrawBackground, this, std::placeholders::_1, std::placeholders::_2));
@@ -47,6 +45,19 @@ namespace cd
 	{
 		if (!m_hasInit)
 			return true;
+
+		if (!m_bufferImg.IsNull())
+		{
+			m_bufferImg.ReleaseDC();
+			m_bufferImg.Destroy();
+		}
+		if (!m_wallpaperImg.IsNull())
+		{
+			m_wallpaperImg.ReleaseDC();
+			m_wallpaperImg.Destroy();
+		}
+		CImage::ReleaseGDIPlus();
+
 		m_hasInit = false;
 		return true;
 	}
@@ -72,20 +83,31 @@ namespace cd
 		wallpaperPath.resize(wallpaperPath[size - 1] == L'\0' ? size - 1 : size);
 
 		// 创建壁纸DC
-		ExecInMainThread([this, wallpaperPath]{
-			ULONG_PTR gdiplusToken = 0;
-			GdiplusStartupInput gdiplusStartupInput;
-			GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-			{
-				Image img(wallpaperPath.c_str());
-				m_wallpaperDC.Create(g_global.m_screenSize.cx, g_global.m_screenSize.cy);
-				Graphics graphics(m_wallpaperDC);
-				graphics.DrawImage(&img, 0, 0, g_global.m_screenSize.cx, g_global.m_screenSize.cy);
-			}
-			GdiplusShutdown(gdiplusToken);
-		});
+		CImage img;
+		img.Load(wallpaperPath.c_str());
+		if (!m_wallpaperImg.IsNull())
+		{
+			m_wallpaperImg.ReleaseDC();
+			m_wallpaperImg.Destroy();
+		}
+		m_wallpaperImg.Create(g_global.m_screenSize.cx, g_global.m_screenSize.cy, 24);
+		m_wallpaperDC = m_wallpaperImg.GetDC();
+		img.Draw(m_wallpaperDC, 0, 0, g_global.m_screenSize.cx, g_global.m_screenSize.cy);
 	}
 
+
+	bool BufferedRendering::OnFileListWndSize(int width, int height)
+	{
+		if (!m_bufferImg.IsNull())
+		{
+			m_bufferImg.ReleaseDC();
+			m_bufferImg.Destroy();
+		}
+		m_bufferImg.Create(width, height, 24);
+		m_bufferDC = m_bufferImg.GetDC();
+		InitWallpaperDC();
+		return true;
+	}
 
 	bool BufferedRendering::OnDrawBackground(HDC& hdc, bool isInBeginPaint)
 	{
@@ -93,7 +115,7 @@ namespace cd
 		{
 			hdc = m_bufferDC;
 			// XP下禁用BeginPaint擦背景后画不上去了，只好自己画背景到缓冲DC
-			BitBlt(m_bufferDC, 0, 0, g_global.m_wndSize.cx, g_global.m_wndSize.cy, m_wallpaperDC, 0, 0, SRCCOPY);
+			m_wallpaperImg.BitBlt(m_bufferDC, 0, 0, g_global.m_wndSize.cx, g_global.m_wndSize.cy, 0, 0);
 			return false;
 		}
 		return true;
@@ -113,8 +135,8 @@ namespace cd
 	{
 		if (lpPaint->hdc != NULL)
 		{
-			BitBlt(m_originalDC, lpPaint->rcPaint.left, lpPaint->rcPaint.top, lpPaint->rcPaint.right - lpPaint->rcPaint.left,
-				lpPaint->rcPaint.bottom - lpPaint->rcPaint.top, m_bufferDC, lpPaint->rcPaint.left, lpPaint->rcPaint.top, SRCCOPY);
+			m_bufferImg.BitBlt(m_originalDC, lpPaint->rcPaint.left, lpPaint->rcPaint.top, lpPaint->rcPaint.right - lpPaint->rcPaint.left,
+				lpPaint->rcPaint.bottom - lpPaint->rcPaint.top, lpPaint->rcPaint.left, lpPaint->rcPaint.top);
 
 			lpPaint->hdc = m_originalDC;
 		}

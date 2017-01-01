@@ -1,8 +1,5 @@
 ﻿#include "stdafx.h"
 #include "MaskDesktop.h"
-#include <comdef.h>
-#include <gdiplus.h>
-using namespace Gdiplus;
 #include <CDEvents.h>
 #include <CDAPI.h>
 #include "MDConfig.h"
@@ -11,26 +8,19 @@ using namespace Gdiplus;
 MaskDesktop::MaskDesktop(HMODULE hModule) : 
 	m_module(hModule)
 {
-	cd::ExecInMainThread([this]{
-		// 载入图片
-		ULONG_PTR gdiplusToken = 0;
-		GdiplusStartupInput gdiplusStartupInput;
-		GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-		{
-			Image img(g_config.m_imagePath.c_str());
-			m_mdc.Create(g_config.m_size, g_config.m_size);
-			Graphics graphics(m_mdc);
-			graphics.DrawImage(&img, -5, -5, g_config.m_size + 10, g_config.m_size + 10);
-		}
-		GdiplusShutdown(gdiplusToken);
+	// 载入图片
+	CImage img;
+	img.Load(g_config.m_imagePath.c_str());
+	m_img.Create(g_config.m_size, g_config.m_size, 32, CImage::createAlphaChannel);
+	img.Draw(m_img.GetDC(), -5, -5, g_config.m_size + 10, g_config.m_size + 10);
+	m_img.ReleaseDC();
 
-		// 监听事件
-		cd::g_fileListWndProcEvent.AddListener(std::bind(&MaskDesktop::OnFileListWndProc, this, std::placeholders::_1, 
-			std::placeholders::_2, std::placeholders::_3), m_module);
-		cd::g_fileListEndPaintEvent.AddListener(std::bind(&MaskDesktop::OnFileListEndPaint, this, std::placeholders::_1), m_module);
+	// 监听事件
+	cd::g_fileListWndProcEvent.AddListener(std::bind(&MaskDesktop::OnFileListWndProc, this, std::placeholders::_1, 
+		std::placeholders::_2, std::placeholders::_3), m_module);
+	cd::g_fileListEndPaintEvent.AddListener(std::bind(&MaskDesktop::OnFileListEndPaint, this, std::placeholders::_1), m_module);
 
-		cd::RedrawDesktop();
-	});
+	cd::RedrawDesktop();
 }
 
 
@@ -70,16 +60,10 @@ bool MaskDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam)
 
 bool MaskDesktop::OnFileListEndPaint(LPPAINTSTRUCT lpPaint)
 {
-	if ((HDC)m_mdc == NULL)
+	if (m_img.IsNull())
 		return true;
 
-	BLENDFUNCTION bf;
-	bf.BlendOp = AC_SRC_OVER;
-	bf.BlendFlags = 0;
-	bf.SourceConstantAlpha = 255;
-	bf.AlphaFormat = AC_SRC_ALPHA;
-	GdiAlphaBlend(lpPaint->hdc, m_curPos.x - g_config.m_size / 2, m_curPos.y - g_config.m_size / 2, g_config.m_size, g_config.m_size
-		, m_mdc, 0, 0, g_config.m_size, g_config.m_size, bf);
+	m_img.AlphaBlend(lpPaint->hdc, m_curPos.x - g_config.m_size / 2, m_curPos.y - g_config.m_size / 2);
 
 	HBRUSH brush = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	SIZE scrSize;

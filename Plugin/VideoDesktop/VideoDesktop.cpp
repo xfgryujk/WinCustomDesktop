@@ -25,7 +25,9 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 		m_curPlayer = m_players[m_curPlayerIndex].get();
 
 		m_curPlayer->GetVideoSize(m_videoSize);
-		m_dc.Create(m_videoSize.cx, m_videoSize.cy, 32);
+		m_img.Create(m_videoSize.cx, m_videoSize.cy, 32);
+		// CImage偷偷改了BOTTOMUP位图的m_pBits...
+		m_imgData = m_img.GetPixelAddress(0, m_videoSize.cy - 1);
 
 		m_curPlayer->RunVideo();
 	});
@@ -51,7 +53,7 @@ bool VideoDesktop::InitPlayer(std::unique_ptr<VideoPlayer>& player)
 
 bool VideoDesktop::OnDrawBackground(HDC& hdc, bool isInBeginPaint)
 {
-	if ((HDC)m_dc == NULL)
+	if (m_img.IsNull())
 		return true;
 
 	// 抗锯齿
@@ -59,9 +61,9 @@ bool VideoDesktop::OnDrawBackground(HDC& hdc, bool isInBeginPaint)
 
 	SIZE size;
 	cd::GetDesktopSize(size);
-	m_dcLock.lock();
-	StretchBlt(hdc, 0, 0, size.cx, size.cy, m_dc, 0, 0, m_videoSize.cx, m_videoSize.cy, SRCCOPY);
-	m_dcLock.unlock();
+	m_imgDataLock.lock();
+	m_img.StretchBlt(hdc, 0, 0, size.cx, size.cy, 0, 0, m_videoSize.cx, m_videoSize.cy);
+	m_imgDataLock.unlock();
 
 	SetStretchBltMode(hdc, oldMode);
 	return false;
@@ -77,10 +79,9 @@ void VideoDesktop::OnPresent(IMediaSample* mediaSample)
 		return;
 	size_t size = min(mediaSample->GetActualDataLength(), m_videoSize.cx * m_videoSize.cy * 4);
 
-	m_dcLock.lock();
-	// RGB位图都是从下到上储存的
-	memcpy(m_dc.GetPixelAddress(0, m_videoSize.cy - 1), sampleBuf, size);
-	m_dcLock.unlock();
+	m_imgDataLock.lock();
+	memcpy(m_imgData, sampleBuf, size);
+	m_imgDataLock.unlock();
 
 	cd::RedrawDesktop();
 }

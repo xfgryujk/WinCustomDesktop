@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "Singleton.h"
-#include "MDC.h"
+#include <atlimage.h>
 
 
 namespace cd
@@ -22,11 +22,14 @@ namespace cd
 
 
 		HDC m_originalDC = NULL;
-		MDC m_bufferDC;
-		MDC m_wallpaperDC;
+		CImage m_bufferImg;
+		HDC m_bufferDC = NULL;
+		CImage m_wallpaperImg;
+		HDC m_wallpaperDC = NULL;
 
 		void InitWallpaperDC();
 
+		bool OnFileListWndSize(int width, int height);
 		bool OnDrawBackground(HDC& hdc, bool isInBeginPaint);
 		bool OnFileListBeginPaint(LPPAINTSTRUCT lpPaint, HDC& res);
 		bool OnFileListEndPaint(LPPAINTSTRUCT lpPaint);

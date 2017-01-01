@@ -12,7 +12,7 @@ using namespace cd;
 
 namespace
 {
-	// 准备卸载的消息
+	// 准备卸载的消息，由Inject.exe发送
 	static const UINT WM_PREUNLOAD = WM_APP + 999;
 
 
@@ -36,6 +36,28 @@ namespace
 	}
 
 
+	// 处理准备卸载的消息
+	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam)
+	{
+		if (message != WM_PREUNLOAD)
+			return true;
+
+		// 卸载hook防止崩溃
+		_RPTF0(_CRT_WARN, "HookDesktop::GetInstance().Uninit();\n");
+		HookDesktop::GetInstance().Uninit();
+
+		_RPTF0(_CRT_WARN, "g_preUnloadEvent();\n");
+		g_preUnloadEvent();
+		// 卸载本模块之前要释放所有插件否则卸载不掉
+		_RPTF0(_CRT_WARN, "PluginManager::GetInstance().UnloadAll();\n");
+		PluginManager::GetInstance().UnloadAll();
+
+		// 卸载GDI+
+		_RPTF0(_CRT_WARN, "BufferedRendering::GetInstance().Uninit();\n");
+		BufferedRendering::GetInstance().Uninit();
+		return false;
+	}
+
 #define InitModule(module) \
 	if (!module::GetInstance().IsReady()) \
 	{ \
@@ -54,23 +76,12 @@ namespace
 		if (pos != std::string::npos)
 			g_global.m_cdDir.resize(pos + 1);
 
-		InitModule(HookDesktop)
 		InitModule(BufferedRendering)
+		InitModule(HookDesktop)
 		InitModule(CDAPIModule)
 		InitModule(PluginManager)
 
-		g_fileListWndProcEvent.AddListener([](UINT message, WPARAM wParam, LPARAM lParam){
-			if (message == WM_PREUNLOAD)
-			{
-				g_preUnloadEvent();
-				// 卸载之前要释放所有插件否则卸载不掉
-				PluginManager::GetInstance().UnloadAll();
-				// 卸载hook防止崩溃
-				HookDesktop::GetInstance().Uninit();
-				return false;
-			}
-			return true;
-		});
+		g_fileListWndProcEvent.AddListener(OnFileListWndProc);
 
 		return true;
 	}
@@ -98,6 +109,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
 
 	case DLL_PROCESS_DETACH:
+		_RPTF0(_CRT_WARN, "CustomDesktop DLL_PROCESS_DETACH\n");
+
 #ifdef _DEBUG
 		FreeConsole();
 #endif

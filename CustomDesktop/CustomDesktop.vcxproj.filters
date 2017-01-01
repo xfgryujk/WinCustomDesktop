@@ -66,9 +66,6 @@
     <ClInclude Include="..\Include\CDCommon.h">
       <Filter>头文件\API</Filter>
     </ClInclude>
-    <ClInclude Include="..\Include\MDC.h">
-      <Filter>头文件\API</Filter>
-    </ClInclude>
     <ClInclude Include="PluginManager.h">
       <Filter>头文件\Module</Filter>
     </ClInclude>
@@ -91,9 +88,6 @@
     </ClCompile>
     <ClCompile Include="BufferedRendering.cpp">
       <Filter>源文件\Module</Filter>
-    </ClCompile>
-    <ClCompile Include="MDC.cpp">
-      <Filter>源文件\API</Filter>
     </ClCompile>
     <ClCompile Include="PluginManager.cpp">
       <Filter>源文件\Module</Filter>

@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <MDC.h>
+#include <atlimage.h>
 
 
 class MaskDesktop final
@@ -10,7 +10,7 @@ public:
 private:
 	HMODULE m_module;
 
-	cd::MDC m_mdc;
+	CImage m_img;
 	POINTS m_curPos;
 
 

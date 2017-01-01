@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "VideoPlayer.h"
 #include <memory>
-#include <MDC.h>
+#include <atlimage.h>
 #include <mutex>
 
 
@@ -9,7 +9,6 @@ class VideoDesktop final
 {
 public:
 	VideoDesktop(HMODULE hModule);
-	~VideoDesktop() = default;
 
 private:
 	HMODULE m_module;
@@ -21,8 +20,9 @@ private:
 	int m_curPlayerIndex = 0;
 	SIZE m_videoSize;
 
-	cd::MDC m_dc;
-	std::mutex m_dcLock;
+	CImage m_img;
+	void* m_imgData = NULL;
+	std::mutex m_imgDataLock;
 
 
 	bool InitPlayer(std::unique_ptr<VideoPlayer>& player);
