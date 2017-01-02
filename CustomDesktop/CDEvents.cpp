@@ -9,6 +9,7 @@ namespace cd
 
 	CD_API DEF_VARIABLE(g_preUnloadEvent);
 
+	CD_API DEF_VARIABLE(g_fileListRedrawWindowEvent);
 	CD_API DEF_VARIABLE(g_drawBackgroundEvent);
 	CD_API DEF_VARIABLE(g_fileListBeginPaintEvent);
 	CD_API DEF_VARIABLE(g_fileListEndPaintEvent);
@@ -22,6 +23,7 @@ namespace cd
 		&g_preUnloadEvent,
 
 		&g_drawBackgroundEvent,
+		&g_fileListRedrawWindowEvent,
 		&g_fileListBeginPaintEvent,
 		&g_fileListEndPaintEvent,
 

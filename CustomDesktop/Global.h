@@ -22,6 +22,11 @@ namespace cd
 		HMODULE m_cdModule = NULL;
 		std::wstring m_cdDir;
 
+		// 正在调用BeginPaint
+		bool m_isInBeginPaint = false;
+		// 需要更新图标层，comctl调用RedrawWindow后为true
+		bool m_needUpdateIcon = true;
+
 
 		bool Init();
 

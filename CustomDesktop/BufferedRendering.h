@@ -5,6 +5,7 @@
 
 namespace cd
 {
+	// 接管桌面绘制过程，顺便实现双缓冲
 	class BufferedRendering final : public Singleton<BufferedRendering>
 	{
 		DECL_SINGLETON(BufferedRendering);
@@ -22,14 +23,19 @@ namespace cd
 
 
 		HDC m_originalDC = NULL;
-		CImage m_bufferImg;
+		CImage m_bufferImg, m_bufferImgBackup;
 		HDC m_bufferDC = NULL;
+
 		CImage m_wallpaperImg;
-		HDC m_wallpaperDC = NULL;
+		CImage m_iconBufferImg;
+		// m_bufferImg复制到m_bufferImgBackup了，现在m_bufferImg是图标层
+		bool m_isUpdatingIcon = false;
 
-		void InitWallpaperDC();
+		bool InitDC();
+		bool InitWallpaperDC();
 
-		bool OnFileListWndSize(int width, int height);
+		bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam);
+		bool OnParentWndProc(UINT message, WPARAM wParam, LPARAM lParam);
 		bool OnDrawBackground(HDC& hdc, bool isInBeginPaint);
 		bool OnFileListBeginPaint(LPPAINTSTRUCT lpPaint, HDC& res);
 		bool OnFileListEndPaint(LPPAINTSTRUCT lpPaint);

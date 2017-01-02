@@ -23,6 +23,9 @@ namespace cd
 		if (g_global.m_comctlModules.empty()) goto NoComctlModule;
 		for (const auto& module : g_global.m_comctlModules)
 		{
+			CIATHook<RedrawWindowType> redrawWindowHook(module, "user32.dll", "RedrawWindow", MyRedrawWindow);
+			if (!redrawWindowHook.IsEnabled()) goto HookFailed;
+			m_redrawWindowHooks.push_back(std::move(redrawWindowHook));
 			CIATHook<BeginPaintType> beginPaintHook(module, "user32.dll", "BeginPaint", MyBeginPaint);
 			if (!beginPaintHook.IsEnabled()) goto HookFailed;
 			m_beginPaintHooks.push_back(std::move(beginPaintHook));
@@ -35,6 +38,7 @@ namespace cd
 		return true;
 
 	HookFailed:
+		m_redrawWindowHooks.clear();
 		m_beginPaintHooks.clear();
 		m_endPaintHooks.clear();
 	NoComctlModule:
@@ -93,6 +97,14 @@ namespace cd
 		return HookDesktop::GetInstance().OnParentWndProc(hwnd, message, wParam, lParam);
 	}
 
+	// 静态RedrawWindow的hook，传递给动态的OnRedrawWindow方法
+	BOOL WINAPI HookDesktop::MyRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate, UINT flags)
+	{
+		if (hWnd == g_global.m_fileListWnd)
+			return HookDesktop::GetInstance().OnRedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
+		return RedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
+	}
+
 	// 静态BeginPaint的hook，传递给动态的OnBeginPaint方法
 	HDC WINAPI HookDesktop::MyBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
 	{
@@ -114,16 +126,6 @@ namespace cd
 	{
 		if (!g_fileListWndProcEvent(message, wParam, lParam))
 			return 1;
-
-		switch (message)
-		{
-		case WM_SIZE:
-			g_global.m_wndSize = { LOWORD(lParam), HIWORD(lParam) };
-			g_global.m_screenSize = { GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
-			g_fileListWndSizeEvent(g_global.m_wndSize.cx, g_global.m_wndSize.cy);
-			break;
-		}
-
 		return CallWindowProc(m_oldFileListWndProc, hwnd, message, wParam, lParam);
 	}
 
@@ -132,25 +134,22 @@ namespace cd
 	{
 		if (!g_parentWndProcEvent(message, wParam, lParam))
 			return 1;
-
-		switch (message)
-		{
-		case WM_ERASEBKGND:
-			// 只有XP下BeginPaint才会擦除背景
-			if (!g_drawBackgroundEvent((HDC&)wParam, m_isInBeginPaint))
-				return 1;
-			break;
-		}
-
 		return CallWindowProc(m_oldParentWndProc, hwnd, message, wParam, lParam);
+	}
+
+	// 动态RedrawWindow的hook
+	BOOL HookDesktop::OnRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate, UINT flags)
+	{
+		g_fileListRedrawWindowEvent(lprcUpdate, hrgnUpdate, flags);
+		return RedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
 	}
 
 	// 动态BeginPaint的hook
 	HDC HookDesktop::OnBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
 	{
-		m_isInBeginPaint = true;
+		g_global.m_isInBeginPaint = true;
 		HDC res = BeginPaint(hWnd, lpPaint);
-		m_isInBeginPaint = false;
+		g_global.m_isInBeginPaint = false;
 		g_fileListBeginPaintEvent(lpPaint, res);
 		return res;
 	}
