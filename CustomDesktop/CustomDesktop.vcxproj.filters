@@ -72,6 +72,9 @@
     <ClInclude Include="Global.h">
       <Filter>头文件\Module</Filter>
     </ClInclude>
+    <ClInclude Include="InlineHook.h">
+      <Filter>头文件\Helper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -97,6 +100,9 @@
     </ClCompile>
     <ClCompile Include="HookDesktop.cpp">
       <Filter>源文件\Module</Filter>
+    </ClCompile>
+    <ClCompile Include="InlineHook.cpp">
+      <Filter>源文件\Helper</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

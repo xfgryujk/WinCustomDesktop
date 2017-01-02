@@ -9,8 +9,11 @@ namespace cd
 
 	CD_API DEF_VARIABLE(g_preUnloadEvent);
 
+	CD_API DEF_VARIABLE(g_preDrawBackgroundEvent);
+	CD_API DEF_VARIABLE(g_postDrawBackgroundEvent);
+	CD_API DEF_VARIABLE(g_postDrawIconEvent);
+
 	CD_API DEF_VARIABLE(g_fileListRedrawWindowEvent);
-	CD_API DEF_VARIABLE(g_drawBackgroundEvent);
 	CD_API DEF_VARIABLE(g_fileListBeginPaintEvent);
 	CD_API DEF_VARIABLE(g_fileListEndPaintEvent);
 
@@ -23,7 +26,10 @@ namespace cd
 	std::vector<EventBase*> g_externalEvents{
 		&g_preUnloadEvent,
 
-		&g_drawBackgroundEvent,
+		&g_preDrawBackgroundEvent,
+		&g_postDrawBackgroundEvent,
+		&g_postDrawIconEvent,
+
 		&g_fileListRedrawWindowEvent,
 		&g_fileListBeginPaintEvent,
 		&g_fileListEndPaintEvent,

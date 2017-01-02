@@ -22,7 +22,12 @@ namespace cd
 		~BufferedRendering();
 
 
+		// XP下不接管桌面绘制。我真是败给XP了...
+		bool m_controlRendering = true;
+
 		HDC m_originalDC = NULL;
+		// BeginPaint获得的更新区域
+		RECT m_paintRect;
 		CImage m_bufferImg, m_bufferImgBackup;
 		HDC m_bufferDC = NULL;
 
@@ -37,7 +42,8 @@ namespace cd
 
 		bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam);
 		bool OnParentWndProc(UINT message, WPARAM wParam, LPARAM lParam);
-		bool OnDrawBackground(HDC& hdc, bool isInBeginPaint);
+		bool OnDrawBackground(HDC& hdc);
+		bool PostDrawIcon(HDC& hdc);
 		bool OnFileListBeginPaint(LPPAINTSTRUCT lpPaint, HDC& res);
 		bool OnFileListEndPaint(LPPAINTSTRUCT lpPaint);
 	};

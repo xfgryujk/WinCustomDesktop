@@ -3,13 +3,24 @@
 #include "Global.h"
 #include <CDEvents.h>
 #include <CDAPI.h>
-#include "HookDesktop.h"
+#ifdef _WIN64
+#include <VersionHelpers.h>
+#endif
 
 
 namespace cd
 {
 	BufferedRendering::BufferedRendering()
 	{
+#ifndef _WIN64
+		DWORD majorVersion = LOBYTE(LOWORD(GetVersion()));
+		if (majorVersion <= 5) // FUCKING XP
+			m_controlRendering = false;
+#else
+		if (!IsWindowsVistaOrGreater())
+			m_controlRendering = false;
+#endif
+
 		Init();
 	}
 
@@ -33,7 +44,9 @@ namespace cd
 			std::placeholders::_3));
 		g_parentWndProcEvent.AddListener(std::bind(&BufferedRendering::OnParentWndProc, this, std::placeholders::_1, std::placeholders::_2,
 			std::placeholders::_3));
-		g_drawBackgroundEvent.AddListener(std::bind(&BufferedRendering::OnDrawBackground, this, std::placeholders::_1, std::placeholders::_2));
+
+		g_postDrawIconEvent.AddListener(std::bind(&BufferedRendering::PostDrawIcon, this, std::placeholders::_1));
+
 		g_fileListRedrawWindowEvent.AddListener([](CONST RECT*, HRGN, UINT){ g_global.m_needUpdateIcon = true; return true; });
 		g_fileListBeginPaintEvent.AddListener(std::bind(&BufferedRendering::OnFileListBeginPaint, this, std::placeholders::_1, std::placeholders::_2));
 		g_fileListEndPaintEvent.AddListener(std::bind(&BufferedRendering::OnFileListEndPaint, this, std::placeholders::_1));
@@ -122,9 +135,16 @@ namespace cd
 			m_wallpaperImg.ReleaseDC();
 			m_wallpaperImg.Destroy();
 		}
-		if (!m_wallpaperImg.Create(g_global.m_screenSize.cx, g_global.m_screenSize.cy, 24))
+		if (!m_wallpaperImg.Create(g_global.m_screenSize.cx, g_global.m_screenSize.cy, 32, CImage::createAlphaChannel))
 			return false;
-		img.Draw(m_wallpaperImg.GetDC(), 0, 0, g_global.m_screenSize.cx, g_global.m_screenSize.cy);
+
+		HDC wallpaperDC = m_wallpaperImg.GetDC();
+		{
+			Gdiplus::Graphics graph(wallpaperDC);
+			Gdiplus::SolidBrush brush(Gdiplus::Color::Black);
+			graph.FillRectangle(&brush, 0, 0, g_global.m_screenSize.cx, g_global.m_screenSize.cy);
+			img.Draw(wallpaperDC, 0, 0, g_global.m_screenSize.cx, g_global.m_screenSize.cy);
+		}
 		m_wallpaperImg.ReleaseDC();
 		return true;
 	}
@@ -145,7 +165,7 @@ namespace cd
 		case WM_PAINT:
 		{
 			// 交给原窗口过程
-			if (g_global.m_needUpdateIcon)
+			if (!m_controlRendering || g_global.m_needUpdateIcon)
 				return true;
 			
 			PAINTSTRUCT paint;
@@ -154,10 +174,16 @@ namespace cd
 			g_global.m_isInBeginPaint = false;
 			g_fileListBeginPaintEvent(&paint, hdc);
 
+			int x = m_paintRect.left;
+			int y = m_paintRect.top;
+			int width = m_paintRect.right - m_paintRect.left;
+			int height = m_paintRect.bottom - m_paintRect.top;
+
 			// 背景层
 			SendMessage(g_global.m_parentWnd, WM_ERASEBKGND, (WPARAM)hdc, 0);
 			// 图标层
-			m_iconBufferImg.AlphaBlend(hdc, 0, 0);
+			m_iconBufferImg.AlphaBlend(hdc, x, y, width, height, x, y, width, height);
+			g_postDrawIconEvent(hdc);
 
 			g_fileListEndPaintEvent(&paint);
 			EndPaint(g_global.m_fileListWnd, &paint);
@@ -174,26 +200,41 @@ namespace cd
 		{
 		case WM_ERASEBKGND:
 			// wParam不一定是m_bufferDC，comctl内部也用了双缓冲
+			HDC hdc = m_bufferDC;
 
 			// 画背景
-			if (g_drawBackgroundEvent(m_bufferDC, g_global.m_isInBeginPaint))
-				CallWindowProc(g_global.m_oldParentWndProc, g_global.m_parentWnd, message, (WPARAM)m_bufferDC, lParam);
+			if (g_preDrawBackgroundEvent(hdc))
+			{
+				if (!g_global.m_isInBeginPaint)
+					CallWindowProc(g_global.m_oldParentWndProc, g_global.m_parentWnd, message, (WPARAM)hdc, lParam);
+				else
+				{
+					// 禁用XP下BeginPaint擦背景，自己画背景
+					// 只有XP下BeginPaint才会擦除背景
+					// XP下用PaintDesktop画背景，但是不能画在内存DC，所以只好自己画背景到缓冲DC
+					m_wallpaperImg.BitBlt(hdc, m_paintRect.left, m_paintRect.top, m_paintRect.right - m_paintRect.left,
+						m_paintRect.bottom - m_paintRect.top, m_paintRect.left, m_paintRect.top);
+				}
+			}
+			g_postDrawBackgroundEvent(hdc);
 
 			// 准备更新图标层
-			if (g_global.m_needUpdateIcon)
+			if (m_controlRendering && g_global.m_needUpdateIcon)
 			{
 				g_global.m_needUpdateIcon = false;
 				m_isUpdatingIcon = true;
 
+				int x = m_paintRect.left;
+				int y = m_paintRect.top;
+				int width = m_paintRect.right - m_paintRect.left;
+				int height = m_paintRect.bottom - m_paintRect.top;
+
 				// 背景复制到m_bufferImgBackup
-				m_bufferImg.BitBlt(m_bufferImgBackup.GetDC(), 0, 0);
+				m_bufferImg.BitBlt(m_bufferImgBackup.GetDC(), x, y, width, height, x, y);
 				m_bufferImgBackup.ReleaseDC();
 
-				// wParam、m_bufferImg alpha清0
-				RECT rect = { 0, 0, g_global.m_wndSize.cx, g_global.m_wndSize.cy };
-				FillRect((HDC)wParam, &rect, (HBRUSH)GetStockObject(BLACK_BRUSH));
-				void* imgData = m_bufferImg.GetPixelAddress(0, m_bufferImg.GetHeight() - 1);
-				memset(imgData, 0, m_bufferImg.GetWidth() * m_bufferImg.GetHeight() * m_bufferImg.GetBPP() / 8);
+				// wParam alpha清0，准备画图标
+				FillRect((HDC)wParam, &m_paintRect, (HBRUSH)GetStockObject(BLACK_BRUSH));
 			}
 
 			// 不需要上级CallWindowProc了
@@ -202,16 +243,41 @@ namespace cd
 		return true;
 	}
 
-	// 禁用XP下BeginPaint擦背景、自己画背景
-	bool BufferedRendering::OnDrawBackground(HDC& hdc, bool isInBeginPaint)
+	// 取画图标层结果
+	bool BufferedRendering::PostDrawIcon(HDC& hdc)
 	{
-		// 只有XP下BeginPaint才会擦除背景
-		if (isInBeginPaint)
+		// 现在缓冲DC是图标层
+		if (m_controlRendering && m_isUpdatingIcon)
 		{
-			hdc = m_bufferDC;
-			// XP下用PaintDesktop画背景，但是不能画在内存DC，所以只好自己画背景到缓冲DC
-			m_wallpaperImg.AlphaBlend(m_bufferDC, 0, 0);
-			return false;
+			m_isUpdatingIcon = false;
+
+			int x = m_paintRect.left;
+			int y = m_paintRect.top;
+			int width = m_paintRect.right - m_paintRect.left;
+			int height = m_paintRect.bottom - m_paintRect.top;
+
+			// 取图标层
+			m_bufferImg.BitBlt(m_iconBufferImg.GetDC(), x, y, width, height, x, y);
+			m_iconBufferImg.ReleaseDC();
+
+			// 处理GDI渲染alpha为0的问题
+			_ASSERT(m_iconBufferImg.GetBPP() == 32); // 32位图
+			for (int i = 0; i < height; i++)
+			{
+				BYTE* pPixel = (BYTE*)m_iconBufferImg.GetPixelAddress(x, y + i);
+				for (int j = 0; j < width; j++, pPixel += 4)
+				{
+					// alpha = 0，RGB != 0，说明是GDI渲染的
+					if (pPixel[3] == 0 && (pPixel[0] != 0 || pPixel[1] != 0 || pPixel[2] != 0))
+						pPixel[3] = 255;
+				}
+			}
+
+
+			// 背景层
+			m_bufferImgBackup.BitBlt(m_bufferDC, x, y, width, height, x, y);
+			// 图标层
+			m_iconBufferImg.AlphaBlend(m_bufferDC, x, y, width, height, x, y, width, height);
 		}
 		return true;
 	}
@@ -223,6 +289,8 @@ namespace cd
 		{
 			m_originalDC = res;
 			res = lpPaint->hdc = m_bufferDC;
+
+			m_paintRect = lpPaint->rcPaint;
 		}
 		return true;
 	}
@@ -238,22 +306,6 @@ namespace cd
 			int y = lpPaint->rcPaint.top;
 			int width = lpPaint->rcPaint.right - lpPaint->rcPaint.left;
 			int height = lpPaint->rcPaint.bottom - lpPaint->rcPaint.top;
-
-			if (m_isUpdatingIcon) // 现在缓冲DC是图标层
-			{
-				m_isUpdatingIcon = false;
-
-				// 取图标层
-				// 目前还要解决图标层文字 alpha为0的问题（因为是GDI渲染的）（只有win10和开了aero的win7会这样...）
-				m_bufferImg.BitBlt(m_iconBufferImg.GetDC(), x, y, width, height, x, y);
-				m_iconBufferImg.ReleaseDC();
-
-				// 背景层
-				m_bufferImgBackup.BitBlt(m_bufferDC, x, y, width, height, x, y);
-				// 图标层
-				m_iconBufferImg.AlphaBlend(m_bufferDC, x, y, width, height, x, y, width, height);
-			}
-
 			m_bufferImg.BitBlt(m_originalDC, x, y, width, height, x, y);
 		}
 		return true;

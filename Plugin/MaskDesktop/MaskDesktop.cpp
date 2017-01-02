@@ -18,7 +18,7 @@ MaskDesktop::MaskDesktop(HMODULE hModule) :
 	// 监听事件
 	cd::g_fileListWndProcEvent.AddListener(std::bind(&MaskDesktop::OnFileListWndProc, this, std::placeholders::_1, 
 		std::placeholders::_2, std::placeholders::_3), m_module);
-	cd::g_fileListEndPaintEvent.AddListener(std::bind(&MaskDesktop::OnFileListEndPaint, this, std::placeholders::_1), m_module);
+	cd::g_postDrawIconEvent.AddListener(std::bind(&MaskDesktop::OnFileListEndPaint, this, std::placeholders::_1), m_module);
 
 	cd::RedrawDesktop();
 }
@@ -58,25 +58,25 @@ bool MaskDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam)
 	return true;
 }
 
-bool MaskDesktop::OnFileListEndPaint(LPPAINTSTRUCT lpPaint)
+bool MaskDesktop::OnFileListEndPaint(HDC& hdc)
 {
 	if (m_img.IsNull())
 		return true;
 
-	m_img.AlphaBlend(lpPaint->hdc, m_curPos.x - g_config.m_size / 2, m_curPos.y - g_config.m_size / 2);
+	m_img.AlphaBlend(hdc, m_curPos.x - g_config.m_size / 2, m_curPos.y - g_config.m_size / 2);
 
 	HBRUSH brush = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	SIZE scrSize;
 	cd::GetDesktopSize(scrSize);
 	RECT rect;
 	rect = { 0, 0, m_curPos.x - g_config.m_size / 2 + 1, scrSize.cy };
-	FillRect(lpPaint->hdc, &rect, brush);
+	FillRect(hdc, &rect, brush);
 	rect = { m_curPos.x - g_config.m_size / 2 + 1, 0, m_curPos.x + g_config.m_size / 2 - 1, m_curPos.y - g_config.m_size / 2 + 1 };
-	FillRect(lpPaint->hdc, &rect, brush);
+	FillRect(hdc, &rect, brush);
 	rect = { m_curPos.x + g_config.m_size / 2 - 1, 0, scrSize.cx, scrSize.cy };
-	FillRect(lpPaint->hdc, &rect, brush);
+	FillRect(hdc, &rect, brush);
 	rect = { m_curPos.x - g_config.m_size / 2 + 1, m_curPos.y + g_config.m_size / 2 - 1, m_curPos.x + g_config.m_size / 2 - 1, scrSize.cy };
-	FillRect(lpPaint->hdc, &rect, brush);
+	FillRect(hdc, &rect, brush);
 
 	return true;
 }	

@@ -7,7 +7,10 @@ namespace cd
 {
 	extern CD_API PostEvent<>							g_preUnloadEvent;				  // 准备卸载，在处理消息时触发
 
-    extern CD_API PreEvent<HDC&, bool>                  g_drawBackgroundEvent;			  // 画桌面背景，参数：目标DC, 被BeginPaint触发
+	extern CD_API PreEvent<HDC&>                        g_preDrawBackgroundEvent;		  // 画桌面背景前被调用，用来取消画背景节省CPU，参数：目标DC
+	extern CD_API PostEvent<HDC&>                       g_postDrawBackgroundEvent;		  // 画完桌面背景后被调用，参数：目标DC
+	extern CD_API PreEvent<HDC&>                        g_postDrawIconEvent;			  // 画完图标后被调用，参数：目标DC
+
 	extern CD_API PreEvent<CONST RECT*, HRGN, UINT>     g_fileListRedrawWindowEvent;      // comctl调用RedrawWindow，参数：lprcUpdate, hrgnUpdate, flags
 	extern CD_API PreEvent<LPPAINTSTRUCT, HDC&>         g_fileListBeginPaintEvent;        // 参数：lpPaint, 返回值
     extern CD_API PostEvent<LPPAINTSTRUCT>              g_fileListEndPaintEvent;          // 参数：lpPaint

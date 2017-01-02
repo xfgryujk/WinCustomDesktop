@@ -66,6 +66,7 @@ namespace cd
 		RedrawDesktop();
 
 		// hook
+		m_redrawWindowHooks.clear();
 		m_beginPaintHooks.clear();
 		m_endPaintHooks.clear();
 
@@ -150,6 +151,7 @@ namespace cd
 		g_global.m_isInBeginPaint = true;
 		HDC res = BeginPaint(hWnd, lpPaint);
 		g_global.m_isInBeginPaint = false;
+
 		g_fileListBeginPaintEvent(lpPaint, res);
 		return res;
 	}
@@ -157,6 +159,7 @@ namespace cd
 	// 动态EndPaint的hook
 	BOOL HookDesktop::OnEndPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
 	{
+		g_postDrawIconEvent(lpPaint->hdc);
 		g_fileListEndPaintEvent(lpPaint);
 		return EndPaint(hWnd, lpPaint);
 	}

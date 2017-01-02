@@ -10,8 +10,8 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 	WM_GRAPHNOTIFY(cd::GetCustomMessageID())
 {
 	// 监听事件
-	cd::g_drawBackgroundEvent.AddListener(std::bind(&VideoDesktop::OnDrawBackground, this, std::placeholders::_1, 
-		std::placeholders::_2), m_module);
+	cd::g_preDrawBackgroundEvent.AddListener([](HDC&){ return false; }, m_module);
+	cd::g_postDrawBackgroundEvent.AddListener(std::bind(&VideoDesktop::OnDrawBackground, this, std::placeholders::_1), m_module);
 	cd::g_fileListWndProcEvent.AddListener(std::bind(&VideoDesktop::OnFileListWndProc, this, std::placeholders::_1,
 		std::placeholders::_2, std::placeholders::_3), m_module);
 
@@ -25,12 +25,19 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 		m_curPlayer = m_players[m_curPlayerIndex].get();
 
 		m_curPlayer->GetVideoSize(m_videoSize);
-		m_img.Create(m_videoSize.cx, m_videoSize.cy, 32);
+		m_img.Create(m_videoSize.cx, m_videoSize.cy, 32/*, CImage::createAlphaChannel*/);
 		// CImage偷偷改了BOTTOMUP位图的m_pBits...
 		m_imgData = m_img.GetPixelAddress(0, m_videoSize.cy - 1);
 
 		m_curPlayer->RunVideo();
 	});
+}
+
+VideoDesktop::~VideoDesktop()
+{
+	// 优先释放players！
+	for (auto& i : m_players)
+		i = nullptr;
 }
 
 bool VideoDesktop::InitPlayer(std::unique_ptr<VideoPlayer>& player)
@@ -51,7 +58,7 @@ bool VideoDesktop::InitPlayer(std::unique_ptr<VideoPlayer>& player)
 }
 
 
-bool VideoDesktop::OnDrawBackground(HDC& hdc, bool isInBeginPaint)
+bool VideoDesktop::OnDrawBackground(HDC& hdc)
 {
 	if (m_img.IsNull())
 		return true;
@@ -71,12 +78,16 @@ void VideoDesktop::OnPresent(IMediaSample* mediaSample)
 	if (FAILED(mediaSample->GetPointer(&sampleBuf)))
 		return;
 
+	size_t sampleSize = mediaSample->GetActualDataLength();
+	size_t imgSize = m_videoSize.cx * m_videoSize.cy * 4;
 	if (mediaSample->GetActualDataLength() < m_videoSize.cx * m_videoSize.cy * 4)
 		return;
-	size_t size = min(mediaSample->GetActualDataLength(), m_videoSize.cx * m_videoSize.cy * 4);
 
 	m_imgDataLock.lock();
-	memcpy(m_imgData, sampleBuf, size);
+	memcpy(m_imgData, sampleBuf, min(sampleSize, imgSize));
+	// 保证alpha = 255
+	/*for (BYTE* pPixel = (BYTE*)m_imgData; pPixel < (BYTE*)m_imgData + imgSize; pPixel += 4)
+		pPixel[3] = 255;*/
 	m_imgDataLock.unlock();
 
 	cd::RedrawDesktop();

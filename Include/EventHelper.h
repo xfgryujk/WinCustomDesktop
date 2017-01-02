@@ -61,13 +61,10 @@ namespace cd
 		// 如果事件被取消返回false
 		bool operator () (ArgTypes... args)
 		{
-			bool res = true;
+			// 按原来的写法32位版会被迷之优化掉，返回false后面的函数不会被调用...
+			volatile bool res = true;
 			for (const auto& i : m_listeners)
-			{
-				// 按原来的写法32位版会被迷之优化掉，返回false后面的函数不会被调用...
-				if (!i.second.m_function(std::forward<ArgTypes>(args)...))
-					res = false;
-			}
+				res = res && i.second.m_function(std::forward<ArgTypes>(args)...);
 			return res;
 		}
 	};

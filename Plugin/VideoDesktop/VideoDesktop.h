@@ -9,6 +9,7 @@ class VideoDesktop final
 {
 public:
 	VideoDesktop(HMODULE hModule);
+	~VideoDesktop();
 
 private:
 	HMODULE m_module;
@@ -27,7 +28,7 @@ private:
 
 	bool InitPlayer(std::unique_ptr<VideoPlayer>& player);
 
-	bool OnDrawBackground(HDC& hdc, bool isInBeginPaint);
+	bool OnDrawBackground(HDC& hdc);
 	void OnPresent(IMediaSample* mediaSample);
 
 	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam);
