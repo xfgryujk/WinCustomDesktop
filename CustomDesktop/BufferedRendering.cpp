@@ -232,7 +232,7 @@ namespace cd
 	// 把缓冲DC复制回窗口DC
 	bool BufferedRendering::OnFileListEndPaint(LPPAINTSTRUCT lpPaint)
 	{
-		if (lpPaint->hdc != NULL)
+		if (lpPaint->hdc != NULL && m_originalDC != NULL)
 		{
 			lpPaint->hdc = m_originalDC;
 
@@ -246,6 +246,7 @@ namespace cd
 				m_isUpdatingIcon = false;
 
 				// 取图标层
+				// 目前还要解决图标层文字还有VideoDesktop复制到m_bufferDC alpha为0的问题（因为是GDI渲染的）
 				m_bufferImg.BitBlt(m_iconBufferImg.GetDC(), x, y, width, height, x, y);
 				m_iconBufferImg.ReleaseDC();
 

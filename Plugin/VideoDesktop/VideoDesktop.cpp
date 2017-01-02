@@ -25,7 +25,7 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 		m_curPlayer = m_players[m_curPlayerIndex].get();
 
 		m_curPlayer->GetVideoSize(m_videoSize);
-		m_img.Create(m_videoSize.cx, m_videoSize.cy, 32, CImage::createAlphaChannel);
+		m_img.Create(m_videoSize.cx, m_videoSize.cy, 32);
 		// CImage偷偷改了BOTTOMUP位图的m_pBits...
 		m_imgData = m_img.GetPixelAddress(0, m_videoSize.cy - 1);
 
@@ -56,16 +56,12 @@ bool VideoDesktop::OnDrawBackground(HDC& hdc, bool isInBeginPaint)
 	if (m_img.IsNull())
 		return true;
 
-	// 抗锯齿
-	int oldMode = SetStretchBltMode(hdc, g_config.m_antiAliasing ? HALFTONE : COLORONCOLOR);
-
 	SIZE size;
 	cd::GetDesktopSize(size);
 	m_imgDataLock.lock();
-	m_img.StretchBlt(hdc, 0, 0, size.cx, size.cy, 0, 0, m_videoSize.cx, m_videoSize.cy);
+	m_img.AlphaBlend(hdc, 0, 0, size.cx, size.cy, 0, 0, m_videoSize.cx, m_videoSize.cy);
 	m_imgDataLock.unlock();
 
-	SetStretchBltMode(hdc, oldMode);
 	return false;
 }
 
