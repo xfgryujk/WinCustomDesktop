@@ -57,6 +57,7 @@ namespace cd
 	}
 
 
+	// 实现ExecInMainThread
 	static bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		if (message == WM_EXEC_FUNCTION)

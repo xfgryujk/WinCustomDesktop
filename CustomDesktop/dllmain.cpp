@@ -6,6 +6,7 @@
 #include "BufferedRendering.h"
 #include "CDAPIModule.h"
 #include "PluginManager.h"
+#include "CheckCovered.h"
 #include <CDEvents.h>
 using namespace cd;
 
@@ -46,6 +47,8 @@ namespace
 		_RPTF0(_CRT_WARN, "HookDesktop::GetInstance().Uninit();\n");
 		HookDesktop::GetInstance().Uninit();
 
+		CheckCovered::GetInstance().Uninit();
+
 		_RPTF0(_CRT_WARN, "g_preUnloadEvent();\n");
 		g_preUnloadEvent();
 		// 卸载本模块之前要释放所有插件否则卸载不掉
@@ -76,12 +79,13 @@ namespace
 		if (pos != std::string::npos)
 			g_global.m_cdDir.resize(pos + 1);
 
+		g_fileListWndProcEvent.AddListener(OnFileListWndProc);
+
 		InitModule(BufferedRendering)
 		InitModule(HookDesktop)
 		InitModule(CDAPIModule)
 		InitModule(PluginManager)
-
-		g_fileListWndProcEvent.AddListener(OnFileListWndProc);
+		InitModule(CheckCovered)
 
 		return true;
 	}

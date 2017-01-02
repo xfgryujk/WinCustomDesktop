@@ -8,6 +8,8 @@ namespace cd
 #define DEF_VARIABLE(name) decltype(name) name
 
 	CD_API DEF_VARIABLE(g_preUnloadEvent);
+	CD_API DEF_VARIABLE(g_desktopCoveredEvent);
+	CD_API DEF_VARIABLE(g_desktopUncoveredEvent);
 
 	CD_API DEF_VARIABLE(g_preDrawBackgroundEvent);
 	CD_API DEF_VARIABLE(g_postDrawBackgroundEvent);
@@ -25,6 +27,8 @@ namespace cd
 	// 外部模块可注册的事件集合，用来自动卸载外部listener
 	std::vector<EventBase*> g_externalEvents{
 		&g_preUnloadEvent,
+		&g_desktopCoveredEvent,
+		&g_desktopUncoveredEvent,
 
 		&g_preDrawBackgroundEvent,
 		&g_postDrawBackgroundEvent,

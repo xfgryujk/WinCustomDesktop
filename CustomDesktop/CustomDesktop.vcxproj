@@ -161,6 +161,7 @@
     <ClInclude Include="..\Include\EventHelper.h" />
     <ClInclude Include="BufferedRendering.h" />
     <ClInclude Include="CDAPIModule.h" />
+    <ClInclude Include="CheckCovered.h" />
     <ClInclude Include="Global.h" />
     <ClInclude Include="HookDesktop.h" />
     <ClInclude Include="IATHook.h" />
@@ -173,6 +174,7 @@
   <ItemGroup>
     <ClCompile Include="BufferedRendering.cpp" />
     <ClCompile Include="CDAPI.cpp" />
+    <ClCompile Include="CheckCovered.cpp" />
     <ClCompile Include="Global.cpp" />
     <ClCompile Include="HookDesktop.cpp" />
     <ClCompile Include="dllmain.cpp">

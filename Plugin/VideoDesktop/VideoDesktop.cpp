@@ -10,6 +10,8 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 	WM_GRAPHNOTIFY(cd::GetCustomMessageID())
 {
 	// 监听事件
+	cd::g_desktopCoveredEvent.AddListener([this]{ m_curPlayer->PauseVideo(); return true; }, m_module);
+	cd::g_desktopUncoveredEvent.AddListener([this]{ m_curPlayer->RunVideo(); return true; }, m_module);
 	cd::g_preDrawBackgroundEvent.AddListener([](HDC&){ return false; }, m_module);
 	cd::g_postDrawBackgroundEvent.AddListener(std::bind(&VideoDesktop::OnDrawBackground, this, std::placeholders::_1), m_module);
 	cd::g_fileListWndProcEvent.AddListener(std::bind(&VideoDesktop::OnFileListWndProc, this, std::placeholders::_1,

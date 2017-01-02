@@ -6,6 +6,8 @@
 namespace cd
 {
 	extern CD_API PostEvent<>							g_preUnloadEvent;				  // 准备卸载，在处理消息时触发
+	extern CD_API PostEvent<>							g_desktopCoveredEvent;			  // 桌面被遮挡了，在处理消息时触发
+	extern CD_API PostEvent<>							g_desktopUncoveredEvent;	      // 桌面从被遮挡恢复，在处理消息时触发
 
 	extern CD_API PreEvent<HDC&>                        g_preDrawBackgroundEvent;		  // 画桌面背景前被调用，用来取消画背景节省CPU，参数：目标DC
 	extern CD_API PostEvent<HDC&>                       g_postDrawBackgroundEvent;		  // 画完桌面背景后被调用，参数：目标DC

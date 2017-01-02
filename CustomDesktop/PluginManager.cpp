@@ -1,9 +1,9 @@
 ﻿#include "stdafx.h"
 #include "PluginManager.h"
-#include <EventHelper.h>
 #include "Global.h"
 #include <CDEvents.h>
 #include <CDAPI.h>
+#include <sstream>
 
 
 namespace cd
@@ -20,7 +20,10 @@ namespace cd
 		plugin.m_module = LoadLibraryW(path);
 		if (plugin.m_module == NULL)
 		{
-			_RPTFW1(_CRT_ERROR, L"加载插件失败：%s\n", path);
+			_RPTFW1(_CRT_WARN, L"加载插件失败：%s\n", path);
+			std::wostringstream oss;
+			oss << L"加载插件失败" << path;
+			MessageBoxW(NULL, oss.str().c_str(), L"CustomDesktop", MB_OK);
 			return false;
 		}
 
