@@ -147,12 +147,8 @@ namespace cd
 		{
 			// 交给原窗口过程
 			if (g_global.m_needUpdateIcon)
-			{
-				_RPT0(_CRT_WARN, "T\n");
 				return true;
-			}
 			
-			_RPT0(_CRT_WARN, "F\n");
 			PAINTSTRUCT paint;
 			g_global.m_isInBeginPaint = true;
 			HDC hdc = BeginPaint(g_global.m_fileListWnd, &paint);
@@ -250,8 +246,6 @@ namespace cd
 				m_isUpdatingIcon = false;
 
 				// 取图标层
-				// 没画图标？
-				// 坐标问题？？
 				m_bufferImg.BitBlt(m_iconBufferImg.GetDC(), x, y, width, height, x, y);
 				m_iconBufferImg.ReleaseDC();
 

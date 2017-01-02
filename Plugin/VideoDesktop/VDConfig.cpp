@@ -21,4 +21,6 @@ void VDConfig::LoadConfig(LPCWSTR path)
 	m_videoPath = std::move(strBuf);
 
 	m_volume = GetPrivateProfileIntW(APPNAME, L"Volume", m_volume, path);
+
+	m_antiAliasing = GetPrivateProfileIntW(APPNAME, L"AntiAliasing", m_antiAliasing, path);
 }
