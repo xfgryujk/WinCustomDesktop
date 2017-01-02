@@ -19,7 +19,8 @@ namespace cd
 	CD_API DEF_VARIABLE(g_parentWndProcEvent);
 
 
-	std::vector<EventBase*> g_events{
+	// 外部模块可注册的事件集合，用来自动卸载外部listener
+	std::vector<EventBase*> g_externalEvents{
 		&g_preUnloadEvent,
 
 		&g_drawBackgroundEvent,

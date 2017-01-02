@@ -28,8 +28,9 @@ namespace cd
 
 		CImage m_wallpaperImg;
 		CImage m_iconBufferImg;
-		// m_bufferImg复制到m_bufferImgBackup了，现在m_bufferImg是图标层
+		// m_bufferImg（背景层）复制到m_bufferImgBackup了，现在m_bufferImg是图标层
 		bool m_isUpdatingIcon = false;
+
 
 		bool InitDC();
 		bool InitWallpaperDC();

@@ -16,11 +16,6 @@ namespace cd
 		bool Init();
 		bool Uninit();
 
-
-		// 以后再想放到哪..
-		WNDPROC m_oldFileListWndProc = NULL;
-		WNDPROC m_oldParentWndProc = NULL;
-
 	private:
 		bool m_hasInit = false;
 

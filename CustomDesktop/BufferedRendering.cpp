@@ -39,7 +39,7 @@ namespace cd
 		g_fileListEndPaintEvent.AddListener(std::bind(&BufferedRendering::OnFileListEndPaint, this, std::placeholders::_1));
 
 		// 获取图标层
-		RedrawDesktop();
+		ExecInMainThread([]{ g_global.m_needUpdateIcon = true; RedrawDesktop(); });
 
 		m_hasInit = true;
 		return true;
@@ -122,7 +122,7 @@ namespace cd
 			m_wallpaperImg.ReleaseDC();
 			m_wallpaperImg.Destroy();
 		}
-		if (!m_wallpaperImg.Create(g_global.m_screenSize.cx, g_global.m_screenSize.cy, 32))
+		if (!m_wallpaperImg.Create(g_global.m_screenSize.cx, g_global.m_screenSize.cy, 24))
 			return false;
 		img.Draw(m_wallpaperImg.GetDC(), 0, 0, g_global.m_screenSize.cx, g_global.m_screenSize.cy);
 		m_wallpaperImg.ReleaseDC();
@@ -140,8 +140,7 @@ namespace cd
 			g_global.m_screenSize = { GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
 			InitDC();
 
-			g_fileListWndSizeEvent(g_global.m_wndSize.cx, g_global.m_wndSize.cy);
-			break;
+			return g_fileListWndSizeEvent(g_global.m_wndSize.cx, g_global.m_wndSize.cy);
 
 		case WM_PAINT:
 		{
@@ -178,7 +177,7 @@ namespace cd
 
 			// 画背景
 			if (g_drawBackgroundEvent(m_bufferDC, g_global.m_isInBeginPaint))
-				CallWindowProc(HookDesktop::GetInstance().m_oldParentWndProc, g_global.m_parentWnd, message, (WPARAM)m_bufferDC, lParam);
+				CallWindowProc(g_global.m_oldParentWndProc, g_global.m_parentWnd, message, (WPARAM)m_bufferDC, lParam);
 
 			// 准备更新图标层
 			if (g_global.m_needUpdateIcon)
@@ -210,9 +209,8 @@ namespace cd
 		if (isInBeginPaint)
 		{
 			hdc = m_bufferDC;
-			// XP下禁用BeginPaint擦背景后画不上去了，只好自己画背景到缓冲DC
-			//m_wallpaperImg.AlphaBlend(m_bufferDC, 0, 0);
-			m_wallpaperImg.BitBlt(m_bufferDC, 0, 0, g_global.m_wndSize.cx, g_global.m_wndSize.cy, 0, 0);
+			// XP下用PaintDesktop画背景，但是不能画在内存DC，所以只好自己画背景到缓冲DC
+			m_wallpaperImg.AlphaBlend(m_bufferDC, 0, 0);
 			return false;
 		}
 		return true;
@@ -246,13 +244,13 @@ namespace cd
 				m_isUpdatingIcon = false;
 
 				// 取图标层
-				// 目前还要解决图标层文字还有VideoDesktop复制到m_bufferDC alpha为0的问题（因为是GDI渲染的）
+				// 目前还要解决图标层文字 alpha为0的问题（因为是GDI渲染的）（只有win10和开了aero的win7会这样...）
 				m_bufferImg.BitBlt(m_iconBufferImg.GetDC(), x, y, width, height, x, y);
 				m_iconBufferImg.ReleaseDC();
 
-				// 背景
+				// 背景层
 				m_bufferImgBackup.BitBlt(m_bufferDC, x, y, width, height, x, y);
-				// 图标
+				// 图标层
 				m_iconBufferImg.AlphaBlend(m_bufferDC, x, y, width, height, x, y, width, height);
 			}
 

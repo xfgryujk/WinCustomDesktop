@@ -14,10 +14,10 @@ namespace cd
 		if (GetModuleHandle(_T("explorer.exe")) == NULL) return false;
 
 		// 子类化
-		m_oldFileListWndProc = (WNDPROC)SetWindowLongPtr(g_global.m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)FileListWndProc);
-		if (m_oldFileListWndProc == NULL) goto SubclassingFileListWndFiled;
-		m_oldParentWndProc = (WNDPROC)SetWindowLongPtr(g_global.m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)ParentWndProc);
-		if (m_oldParentWndProc == NULL) goto SubclassingParentWndFiled;
+		g_global.m_oldFileListWndProc = (WNDPROC)SetWindowLongPtr(g_global.m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)FileListWndProc);
+		if (g_global.m_oldFileListWndProc == NULL) goto SubclassingFileListWndFiled;
+		g_global.m_oldParentWndProc = (WNDPROC)SetWindowLongPtr(g_global.m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)ParentWndProc);
+		if (g_global.m_oldParentWndProc == NULL) goto SubclassingParentWndFiled;
 
 		// hook
 		if (g_global.m_comctlModules.empty()) goto NoComctlModule;
@@ -42,11 +42,11 @@ namespace cd
 		m_beginPaintHooks.clear();
 		m_endPaintHooks.clear();
 	NoComctlModule:
-		SetWindowLongPtr(g_global.m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldParentWndProc);
-		m_oldParentWndProc = NULL;
+		SetWindowLongPtr(g_global.m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)g_global.m_oldParentWndProc);
+		g_global.m_oldParentWndProc = NULL;
 	SubclassingParentWndFiled:
-		SetWindowLongPtr(g_global.m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldFileListWndProc);
-		m_oldFileListWndProc = NULL;
+		SetWindowLongPtr(g_global.m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)g_global.m_oldFileListWndProc);
+		g_global.m_oldFileListWndProc = NULL;
 	SubclassingFileListWndFiled:
 		return false;
 	}
@@ -59,17 +59,17 @@ namespace cd
 		m_hasInit = false;
 
 		// 子类化
-		if (IsWindow(g_global.m_fileListWnd) && m_oldFileListWndProc != NULL)
-			SetWindowLongPtr(g_global.m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldFileListWndProc);
-		if (IsWindow(g_global.m_parentWnd) && m_oldParentWndProc != NULL)
-			SetWindowLongPtr(g_global.m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)m_oldParentWndProc);
+		if (IsWindow(g_global.m_fileListWnd) && g_global.m_oldFileListWndProc != NULL)
+			SetWindowLongPtr(g_global.m_fileListWnd, GWLP_WNDPROC, (ULONG_PTR)g_global.m_oldFileListWndProc);
+		if (IsWindow(g_global.m_parentWnd) && g_global.m_oldParentWndProc != NULL)
+			SetWindowLongPtr(g_global.m_parentWnd, GWLP_WNDPROC, (ULONG_PTR)g_global.m_oldParentWndProc);
 		RedrawDesktop();
 
 		// hook
 		m_beginPaintHooks.clear();
 		m_endPaintHooks.clear();
 
-		m_oldFileListWndProc = m_oldParentWndProc = NULL;
+		g_global.m_oldFileListWndProc = g_global.m_oldParentWndProc = NULL;
 
 		return true;
 	}
@@ -126,7 +126,7 @@ namespace cd
 	{
 		if (!g_fileListWndProcEvent(message, wParam, lParam))
 			return 1;
-		return CallWindowProc(m_oldFileListWndProc, hwnd, message, wParam, lParam);
+		return CallWindowProc(g_global.m_oldFileListWndProc, hwnd, message, wParam, lParam);
 	}
 
 	// 动态父窗口过程
@@ -134,7 +134,7 @@ namespace cd
 	{
 		if (!g_parentWndProcEvent(message, wParam, lParam))
 			return 1;
-		return CallWindowProc(m_oldParentWndProc, hwnd, message, wParam, lParam);
+		return CallWindowProc(g_global.m_oldParentWndProc, hwnd, message, wParam, lParam);
 	}
 
 	// 动态RedrawWindow的hook
