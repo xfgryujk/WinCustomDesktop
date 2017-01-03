@@ -1,7 +1,20 @@
 WinCustomDesktop
 =========
 
-自绘桌面，用你的代码绘制桌面，支持插件开发，这里以*遮罩桌面*和*播放视频*为例
+自绘桌面框架，用你的代码绘制桌面，支持插件开发。目前自带的插件有*播放视频*和*遮罩桌面*
+
+### 播放*Bad Apple*
+
+![VideoDesktop](https://github.com/xfgryujk/WinCustomDesktop/blob/master/.wiki/image/snapshot_VideoDesktop.gif)
+
+### 遮罩桌面
+![MaskDesktop](https://github.com/xfgryujk/WinCustomDesktop/blob/master/.wiki/image/snapshot_MaskDesktop.gif)
+
+### 资源占用
+
+经过优化，占用的计算资源很少，以下为播放*Bad Apple*时占用的资源
+
+![MaskDesktop](https://github.com/xfgryujk/WinCustomDesktop/blob/master/.wiki/image/snapshot_CPU.png)
 
 
 使用方法
