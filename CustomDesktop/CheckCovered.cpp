@@ -2,7 +2,9 @@
 #include "CheckCovered.h"
 #include <CDEvents.h>
 #include <CDAPI.h>
-#include <string>
+#ifdef _WIN64
+#include <Dwmapi.h>
+#endif
 
 
 namespace cd
@@ -78,9 +80,17 @@ namespace cd
 		m_coveredByHwnd = NULL;
 
 		EnumWindows([](HWND hwnd, LPARAM pCoveredByHwnd)->BOOL{
+#ifdef _WIN64
+			// 对于win10 app，不能用IsWindowVisible判断是否可见
+			BOOL isCloaked = FALSE;
+			DwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, &isCloaked, sizeof(isCloaked));
+			if (isCloaked)
+				return TRUE;
+#endif
+
+			// 有最大化的窗口而且可见则被遮挡（最小化也是不可见）
 			if (IsZoomed(hwnd) && IsWindowVisible(hwnd))
 			{
-
 				*(HWND*)pCoveredByHwnd = hwnd;
 				return FALSE;
 			}
