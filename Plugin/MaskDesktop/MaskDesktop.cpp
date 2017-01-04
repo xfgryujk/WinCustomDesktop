@@ -18,7 +18,7 @@ MaskDesktop::MaskDesktop(HMODULE hModule) :
 	// 监听事件
 	cd::g_fileListWndProcEvent.AddListener(std::bind(&MaskDesktop::OnFileListWndProc, this, std::placeholders::_1, 
 		std::placeholders::_2, std::placeholders::_3), m_module);
-	cd::g_postDrawIconEvent.AddListener(std::bind(&MaskDesktop::OnFileListEndPaint, this, std::placeholders::_1), m_module);
+	cd::g_postDrawIconEvent.AddListener(std::bind(&MaskDesktop::OnPostDrawIcon, this, std::placeholders::_1), m_module);
 
 	cd::RedrawDesktop();
 }
@@ -58,7 +58,7 @@ bool MaskDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam)
 	return true;
 }
 
-bool MaskDesktop::OnFileListEndPaint(HDC& hdc)
+bool MaskDesktop::OnPostDrawIcon(HDC& hdc)
 {
 	if (m_img.IsNull())
 		return true;

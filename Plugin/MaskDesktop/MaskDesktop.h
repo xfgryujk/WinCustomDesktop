@@ -15,5 +15,5 @@ private:
 
 
 	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam);
-	bool OnFileListEndPaint(HDC& hdc);
+	bool OnPostDrawIcon(HDC& hdc);
 };

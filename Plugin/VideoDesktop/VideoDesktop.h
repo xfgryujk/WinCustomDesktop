@@ -28,7 +28,7 @@ private:
 
 	bool InitPlayer(std::unique_ptr<VideoPlayer>& player);
 
-	bool OnDrawBackground(HDC& hdc);
+	bool OnPostDrawBackground(HDC& hdc);
 	void OnPresent(IMediaSample* mediaSample);
 
 	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam);

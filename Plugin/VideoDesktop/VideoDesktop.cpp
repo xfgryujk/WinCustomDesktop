@@ -13,7 +13,7 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 	cd::g_desktopCoveredEvent.AddListener([this]{ m_curPlayer->PauseVideo(); return true; }, m_module);
 	cd::g_desktopUncoveredEvent.AddListener([this]{ m_curPlayer->RunVideo(); return true; }, m_module);
 	cd::g_preDrawBackgroundEvent.AddListener([](HDC&){ return false; }, m_module);
-	cd::g_postDrawBackgroundEvent.AddListener(std::bind(&VideoDesktop::OnDrawBackground, this, std::placeholders::_1), m_module);
+	cd::g_postDrawBackgroundEvent.AddListener(std::bind(&VideoDesktop::OnPostDrawBackground, this, std::placeholders::_1), m_module);
 	cd::g_fileListWndProcEvent.AddListener(std::bind(&VideoDesktop::OnFileListWndProc, this, std::placeholders::_1,
 		std::placeholders::_2, std::placeholders::_3), m_module);
 
@@ -60,7 +60,7 @@ bool VideoDesktop::InitPlayer(std::unique_ptr<VideoPlayer>& player)
 }
 
 
-bool VideoDesktop::OnDrawBackground(HDC& hdc)
+bool VideoDesktop::OnPostDrawBackground(HDC& hdc)
 {
 	if (m_img.IsNull())
 		return true;
