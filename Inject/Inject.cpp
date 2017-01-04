@@ -127,6 +127,22 @@ HMODULE GetRemoteModuleHandle(DWORD pid, LPCTSTR moduleName)
 	return handle;
 }
 
+// 桌面顶级窗口可能是Program Manager或者WorkerW
+HWND GetDesktopTopHwnd()
+{
+	HWND topHwnd = NULL;
+	EnumWindows([](HWND hwnd, LPARAM pTopHwnd)->BOOL{
+		HWND parentWnd = FindWindowEx(hwnd, NULL, _T("SHELLDLL_DefView"), _T(""));
+		if (parentWnd != NULL && FindWindowEx(parentWnd, NULL, _T("SysListView32"), _T("FolderView")) != NULL)
+		{
+			*(HWND*)pTopHwnd = hwnd;
+			return FALSE;
+		}
+		return TRUE;
+	}, (LPARAM)&topHwnd);
+	return topHwnd;
+}
+
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -150,7 +166,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		puts("卸载DLL");
 
 		// 发消息卸载所有插件
-		HWND hwnd = FindWindow(_T("Progman"), _T("Program Manager"));
+		HWND hwnd = GetDesktopTopHwnd();
 		hwnd = FindWindowEx(hwnd, NULL, _T("SHELLDLL_DefView"), _T(""));
 		hwnd = FindWindowEx(hwnd, NULL, _T("SysListView32"), _T("FolderView"));
 		SendMessage(hwnd, WM_PREUNLOAD, NULL, NULL);

@@ -9,7 +9,7 @@ namespace cd
 
 	bool Global::Init()
 	{
-		m_topWnd = FindWindow(_T("Progman"), _T("Program Manager"));
+		m_topWnd = GetDesktopTopHwnd();
 		m_parentWnd = FindWindowEx(m_topWnd, NULL, _T("SHELLDLL_DefView"), _T(""));
 		m_fileListWnd = FindWindowEx(m_parentWnd, NULL, _T("SysListView32"), _T("FolderView"));
 		if (m_fileListWnd == NULL) return false;
@@ -39,5 +39,21 @@ namespace cd
 	Global::Global()
 	{
 		Init();
+	}
+
+	// 桌面顶级窗口可能是Program Manager或者WorkerW
+	HWND Global::GetDesktopTopHwnd()
+	{
+		HWND topHwnd = NULL;
+		EnumWindows([](HWND hwnd, LPARAM pTopHwnd)->BOOL{
+			HWND parentWnd = FindWindowEx(hwnd, NULL, _T("SHELLDLL_DefView"), _T(""));
+			if (parentWnd != NULL && FindWindowEx(parentWnd, NULL, _T("SysListView32"), _T("FolderView")) != NULL)
+			{
+				*(HWND*)pTopHwnd = hwnd;
+				return FALSE;
+			}
+			return TRUE;
+		}, (LPARAM)&topHwnd);
+		return topHwnd;
 	}
 }

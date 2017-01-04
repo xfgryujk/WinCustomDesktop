@@ -39,6 +39,8 @@ namespace cd
 	private:
 		Global();
 		~Global() = default;
+
+		HWND GetDesktopTopHwnd();
 	};
 
 	extern Global& g_global;
