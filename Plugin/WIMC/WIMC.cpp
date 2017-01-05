@@ -25,14 +25,18 @@ WIMC::WIMC(HMODULE hModule) :
 
 bool WIMC::OnPostDrawIcon(HDC& hdc)
 {
-	POINT pos;
-	GetCursorPos(&pos);
+	CURSORINFO info;
+	info.cbSize = sizeof(info);
+	if (!GetCursorInfo(&info))
+		return true;
+
+	POINT& pos = info.ptScreenPos;
 	float distance = sqrtf(float((pos.x - m_cursorOrigin.x) * (pos.x - m_cursorOrigin.x) 
 		+ (pos.y - m_cursorOrigin.y) * (pos.y - m_cursorOrigin.y)));
 	float angle = atan2f(float(pos.y - m_cursorOrigin.y), float(pos.x - m_cursorOrigin.x));
 
 	for (auto& i : m_fakeCursors)
-		i.Draw(hdc, distance, angle);
+		i.Draw(hdc, info.hCursor, distance, angle, m_renderer);
 
 	return true;
 }
@@ -52,13 +56,9 @@ WIMC::FakeCursor::FakeCursor()
 	angle = GetRandomFloat(0.0f, 2.0f * float(M_PI));
 }
 
-void WIMC::FakeCursor::Draw(HDC hdc, float cursorDistance, float cursorAngle)
+void WIMC::FakeCursor::Draw(HDC hdc, HCURSOR cursor, float cursorDistance, float cursorAngle, CursorRenderer& renderer)
 {
 	int x = int(origin.x + cursorDistance * cosf(cursorAngle + angle));
 	int y = int(origin.y + cursorDistance * sinf(cursorAngle + angle));
-	CURSORINFO info;
-	info.cbSize = sizeof(info);
-	GetCursorInfo(&info);
-	// 结果不准确、耗CPU，待改进
-	DrawIconEx(hdc, x, y, info.hCursor, 0, 0, 0, NULL, DI_NORMAL | DI_DEFAULTSIZE);
+	renderer.DrawCursor(hdc, cursor, x, y);
 }

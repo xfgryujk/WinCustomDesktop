@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <vector>
+#include "CursorRenderer.h"
 
 
 class WIMC final
@@ -21,10 +22,11 @@ private:
 
 		FakeCursor();
 		// 参数：真实鼠标的极坐标
-		void Draw(HDC hdc, float cursorDistance, float cursorAngle);
+		void Draw(HDC hdc, HCURSOR cursor, float cursorDistance, float cursorAngle, CursorRenderer& renderer);
 	};
 
 	// 真实鼠标的极坐标原点
 	POINT m_cursorOrigin;
 	std::vector<FakeCursor> m_fakeCursors;
+	CursorRenderer m_renderer;
 };

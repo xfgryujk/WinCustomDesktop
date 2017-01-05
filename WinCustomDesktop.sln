@@ -23,6 +23,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MaskDesktop", "Plugin\MaskD
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WIMC", "Plugin\WIMC\WIMC.vcxproj", "{6F346AAF-FB0B-4E5B-86BE-959D3883B05E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{760416AE-79C5-4778-BE97-18472B4E61BB} = {760416AE-79C5-4778-BE97-18472B4E61BB}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
