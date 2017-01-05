@@ -165,7 +165,6 @@
     <ClInclude Include="Global.h" />
     <ClInclude Include="HookDesktop.h" />
     <ClInclude Include="IATHook.h" />
-    <ClInclude Include="InlineHook.h" />
     <ClInclude Include="PluginManager.h" />
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="stdafx.h" />
@@ -192,7 +191,6 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="CDEvents.cpp" />
-    <ClCompile Include="InlineHook.cpp" />
     <ClCompile Include="PluginManager.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

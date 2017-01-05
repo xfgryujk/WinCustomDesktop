@@ -14,4 +14,8 @@ Config::Config()
 void Config::LoadConfig(LPCWSTR path)
 {
 	m_nCursors = GetPrivateProfileIntW(APPNAME, L"NumberOfCursors", m_nCursors, path);
+	if (m_nCursors < 0)
+		m_nCursors = 0;
+	else if (m_nCursors > 10000)
+		m_nCursors = 10000;
 }

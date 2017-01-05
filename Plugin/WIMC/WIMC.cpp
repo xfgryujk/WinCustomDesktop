@@ -30,23 +30,16 @@ bool WIMC::OnPostDrawIcon(HDC& hdc)
 	if (!GetCursorInfo(&info))
 		return true;
 
-	/*DrawIconEx(hdc, 0, 0, info.hCursor, 0, 0, 0, NULL, DI_NORMAL | DI_DEFAULTSIZE);
-	DrawIconEx(hdc, 0, 50, info.hCursor, 0, 0, 0, NULL, DI_IMAGE | DI_DEFAULTSIZE);
-	DrawIconEx(hdc, 0, 100, info.hCursor, 0, 0, 0, NULL, DI_MASK | DI_DEFAULTSIZE);
-
-	ICONINFO iconInfo;
-	GetIconInfo(info.hCursor, &iconInfo);
-	CImage tmp;
-	tmp.Attach(iconInfo.hbmMask);
-	tmp.Draw(hdc, 0, 150);*/
-
 	POINT& pos = info.ptScreenPos;
 	float distance = sqrtf(float((pos.x - m_cursorOrigin.x) * (pos.x - m_cursorOrigin.x) 
 		+ (pos.y - m_cursorOrigin.y) * (pos.y - m_cursorOrigin.y)));
 	float angle = atan2f(float(pos.y - m_cursorOrigin.y), float(pos.x - m_cursorOrigin.x));
 
+	int width = GetSystemMetrics(SM_CXCURSOR);
+	int height = GetSystemMetrics(SM_CYCURSOR);
+
 	for (auto& i : m_fakeCursors)
-		i.Draw(hdc, info.hCursor, distance, angle, m_renderer);
+		i.Draw(hdc, info.hCursor, distance, angle, width, height);
 
 	return true;
 }
@@ -61,14 +54,15 @@ WIMC::FakeCursor::FakeCursor()
 {
 	SIZE size;
 	cd::GetDesktopSize(size);
-	origin.x = (int)GetRandomFloat(-size.cx / 2.0f, size.cx * 1.5f);
-	origin.y = (int)GetRandomFloat(-size.cy / 2.0f, size.cy * 1.5f);
+	origin.x = (int)GetRandomFloat(-size.cx * 0.75f, size.cx * 1.75f);
+	origin.y = (int)GetRandomFloat(-size.cy * 0.75f, size.cy * 1.75f);
 	angle = GetRandomFloat(0.0f, 2.0f * float(M_PI));
 }
 
-void WIMC::FakeCursor::Draw(HDC hdc, HCURSOR cursor, float cursorDistance, float cursorAngle, CursorRenderer& renderer)
+void WIMC::FakeCursor::Draw(HDC hdc, HCURSOR cursor, float cursorDistance, float cursorAngle, int width, int height)
 {
 	int x = int(origin.x + cursorDistance * cosf(cursorAngle + angle));
 	int y = int(origin.y + cursorDistance * sinf(cursorAngle + angle));
-	renderer.DrawCursor(hdc, cursor, x, y);
+	// 没有对准热点，不过没什么影响
+	DrawIconEx(hdc, x, y, cursor, width, height, 0, NULL, DI_NORMAL);
 }

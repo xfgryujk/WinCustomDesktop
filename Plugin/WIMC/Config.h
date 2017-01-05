@@ -6,7 +6,7 @@ static const TCHAR APPNAME[] = _T("WIMC");
 class Config final
 {
 public:
-	int m_nCursors = 50;
+	int m_nCursors = 500;
 
 
 	Config();
