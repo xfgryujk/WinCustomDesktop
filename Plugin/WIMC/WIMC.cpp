@@ -30,6 +30,16 @@ bool WIMC::OnPostDrawIcon(HDC& hdc)
 	if (!GetCursorInfo(&info))
 		return true;
 
+	/*DrawIconEx(hdc, 0, 0, info.hCursor, 0, 0, 0, NULL, DI_NORMAL | DI_DEFAULTSIZE);
+	DrawIconEx(hdc, 0, 50, info.hCursor, 0, 0, 0, NULL, DI_IMAGE | DI_DEFAULTSIZE);
+	DrawIconEx(hdc, 0, 100, info.hCursor, 0, 0, 0, NULL, DI_MASK | DI_DEFAULTSIZE);
+
+	ICONINFO iconInfo;
+	GetIconInfo(info.hCursor, &iconInfo);
+	CImage tmp;
+	tmp.Attach(iconInfo.hbmMask);
+	tmp.Draw(hdc, 0, 150);*/
+
 	POINT& pos = info.ptScreenPos;
 	float distance = sqrtf(float((pos.x - m_cursorOrigin.x) * (pos.x - m_cursorOrigin.x) 
 		+ (pos.y - m_cursorOrigin.y) * (pos.y - m_cursorOrigin.y)));

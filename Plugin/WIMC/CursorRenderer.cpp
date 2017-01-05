@@ -104,10 +104,18 @@ bool CursorRenderer::GetCursorMonoImage(HBITMAP mask, CImage& img)
 		BYTE* imgData = (BYTE*)img.GetPixelAddress(0, y);
 		for (int x = 0; x < maskBmp.bmWidth; x++)
 		{
-			if (GetMonoBmpBit(maskData.get(), x * y) == 0) // 与掩码为0，alpha为异或掩码取反
-				imgData[x * 4 + 3] = (GetMonoBmpBit(xorMask, x * y) != 0 ? 0 : 255);
-			else // 与掩码为1，alpha为255，RGB为异或掩码
-				*(DWORD*)&imgData[x * 4] = (GetMonoBmpBit(xorMask, x * y) != 0 ? 0xFFFFFFFF : 0xFF000000);
+			if (GetMonoBmpBit(maskData.get(), x * y) == 0) 
+			{
+				// 与掩码为0，变黑
+				// 异或掩码为0则不变（变黑），异或掩码为1则反相（变白）
+				*(DWORD*)&imgData[x * 4] = (GetMonoBmpBit(xorMask, x * y) == 0 ? 0xFF000000 : 0xFFFFFFFF);
+			}
+			else
+			{
+				// 与掩码为1，不变
+				// 异或掩码为0则不变（alpha=0），异或掩码为1则反相（无法用alpha模拟）
+				*(DWORD*)&imgData[x * 4] = (GetMonoBmpBit(xorMask, x * y) == 0 ? 0x00000000 : 0xFF7F7F7F);
+			}
 		}
 	}
 
