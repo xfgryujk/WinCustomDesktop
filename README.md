@@ -1,20 +1,31 @@
 WinCustomDesktop
 =========
 
-自绘桌面框架，用你的代码绘制桌面，支持插件开发。目前自带的插件有*播放视频*和*遮罩桌面*
+自绘桌面框架，用你的代码绘制桌面，支持插件开发
+
+目前自带的插件有播放视频、遮罩桌面和WIMC
+
+想法来自DreamScene，在Wallpaper Engine出来很早之前就做过类似的了，最近想完善它
 
 ### 播放*Bad Apple*
 
 ![VideoDesktop](https://github.com/xfgryujk/WinCustomDesktop/blob/master/.wiki/image/snapshot_VideoDesktop.gif)
 
 ### 遮罩桌面
+
 ![MaskDesktop](https://github.com/xfgryujk/WinCustomDesktop/blob/master/.wiki/image/snapshot_MaskDesktop.gif)
+
+### WIMC
+
+WIMC = Where the fuck Is My Cursor
+
+![WIMC](https://github.com/xfgryujk/WinCustomDesktop/blob/master/.wiki/image/snapshot_WIMC.gif)
 
 ### 资源占用
 
 经过优化，占用的计算资源很少，以下为播放*Bad Apple*时占用的资源
 
-![MaskDesktop](https://github.com/xfgryujk/WinCustomDesktop/blob/master/.wiki/image/snapshot_CPU.png)
+![CPU](https://github.com/xfgryujk/WinCustomDesktop/blob/master/.wiki/image/snapshot_CPU.png)
 
 
 支持的平台
