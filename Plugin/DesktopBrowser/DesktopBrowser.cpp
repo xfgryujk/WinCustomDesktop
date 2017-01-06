@@ -17,6 +17,7 @@ DesktopBrowser::DesktopBrowser(HMODULE hModule) :
 		m_browser->SetPos(pos);
 		return true;
 	}, m_module);
+	cd::g_preDrawBackgroundEvent.AddListener([](HDC&){ return false; }, m_module);
 	cd::g_desktopCoveredEvent.AddListener([this]{ m_pauseFlag = true; return true; }, m_module);
 	cd::g_desktopUncoveredEvent.AddListener([this]{ m_pauseFlag = false; return true; }, m_module);
 
@@ -70,6 +71,8 @@ bool DesktopBrowser::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lPara
 
 bool DesktopBrowser::OnPostDrawBackground(HDC& hdc)
 {
+	if (m_browser == nullptr)
+		return true;
 	SIZE size;
 	cd::GetDesktopSize(size);
 	RECT rect = { 0, 0, size.cx, size.cy };
