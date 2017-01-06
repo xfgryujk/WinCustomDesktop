@@ -17,14 +17,14 @@ MaskDesktop::MaskDesktop(HMODULE hModule) :
 
 	// 监听事件
 	cd::g_fileListWndProcEvent.AddListener(std::bind(&MaskDesktop::OnFileListWndProc, this, std::placeholders::_1, 
-		std::placeholders::_2, std::placeholders::_3), m_module);
+		std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), m_module);
 	cd::g_postDrawIconEvent.AddListener(std::bind(&MaskDesktop::OnPostDrawIcon, this, std::placeholders::_1), m_module);
 
 	cd::RedrawDesktop();
 }
 
 
-bool MaskDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam)
+bool MaskDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
 {
 	if (message == WM_MOUSEMOVE)
 	{

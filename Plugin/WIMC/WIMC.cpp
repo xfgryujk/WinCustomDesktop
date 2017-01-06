@@ -14,7 +14,7 @@ WIMC::WIMC(HMODULE hModule) :
 	m_fakeCursors.resize(g_config.m_nCursors);
 
 	cd::g_postDrawIconEvent.AddListener(std::bind(&WIMC::OnPostDrawIcon, this, std::placeholders::_1), m_module);
-	cd::g_fileListWndProcEvent.AddListener([](UINT message, WPARAM, LPARAM){
+	cd::g_fileListWndProcEvent.AddListener([](UINT message, WPARAM, LPARAM, LRESULT& res){
 		if (message == WM_MOUSEMOVE)
 			cd::RedrawDesktop();
 		return true;

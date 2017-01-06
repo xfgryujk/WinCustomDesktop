@@ -14,6 +14,6 @@ private:
 	POINTS m_curPos;
 
 
-	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam);
+	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res);
 	bool OnPostDrawIcon(HDC& hdc);
 };

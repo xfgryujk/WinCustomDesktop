@@ -41,9 +41,9 @@ namespace cd
 
 		// 监听事件
 		g_fileListWndProcEvent.AddListener(std::bind(&BufferedRendering::OnFileListWndProc, this, std::placeholders::_1, std::placeholders::_2, 
-			std::placeholders::_3));
+			std::placeholders::_3, std::placeholders::_4));
 		g_parentWndProcEvent.AddListener(std::bind(&BufferedRendering::OnParentWndProc, this, std::placeholders::_1, std::placeholders::_2,
-			std::placeholders::_3));
+			std::placeholders::_3, std::placeholders::_4));
 
 		g_postDrawIconEvent.AddListener(std::bind(&BufferedRendering::PostDrawIcon, this, std::placeholders::_1));
 
@@ -151,7 +151,7 @@ namespace cd
 
 
 	// 处理size、接管paint
-	bool BufferedRendering::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam)
+	bool BufferedRendering::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
 	{
 		switch (message)
 		{
@@ -160,6 +160,7 @@ namespace cd
 			g_global.m_screenSize = { GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
 			InitDC();
 
+			res = 1;
 			return g_fileListWndSizeEvent(g_global.m_wndSize.cx, g_global.m_wndSize.cy);
 
 		case WM_PAINT:
@@ -187,6 +188,7 @@ namespace cd
 
 			g_fileListEndPaintEvent(&paint);
 			EndPaint(g_global.m_fileListWnd, &paint);
+			res = 1;
 			return false;
 		}
 		}
@@ -194,11 +196,11 @@ namespace cd
 	}
 
 	// 触发画背景事件
-	bool BufferedRendering::OnParentWndProc(UINT message, WPARAM wParam, LPARAM lParam)
+	bool BufferedRendering::OnParentWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
 	{
 		switch (message)
 		{
-		case WM_ERASEBKGND:
+		case WM_ERASEBKGND: // 当顶级窗口是WorkerW时收不到这个消息？
 			// wParam不一定是m_bufferDC，comctl内部也用了双缓冲
 			HDC hdc = m_bufferDC;
 
@@ -238,6 +240,7 @@ namespace cd
 			}
 
 			// 不需要上级CallWindowProc了
+			res = 1;
 			return false;
 		}
 		return true;

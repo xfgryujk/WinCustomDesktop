@@ -38,7 +38,7 @@ namespace
 
 
 	// 处理准备卸载的消息
-	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam)
+	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
 	{
 		if (message != WM_PREUNLOAD)
 			return true;
@@ -58,6 +58,8 @@ namespace
 		// 卸载GDI+
 		_RPTF0(_CRT_WARN, "BufferedRendering::GetInstance().Uninit();\n");
 		BufferedRendering::GetInstance().Uninit();
+
+		res = 1;
 		return false;
 	}
 

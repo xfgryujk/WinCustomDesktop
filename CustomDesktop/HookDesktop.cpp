@@ -125,16 +125,18 @@ namespace cd
 	// 动态文件列表窗口过程
 	LRESULT HookDesktop::OnFileListWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
-		if (!g_fileListWndProcEvent(message, wParam, lParam))
-			return 1;
+		LRESULT res = 0;
+		if (!g_fileListWndProcEvent(message, wParam, lParam, res))
+			return res;
 		return CallWindowProc(g_global.m_oldFileListWndProc, hwnd, message, wParam, lParam);
 	}
 
 	// 动态父窗口过程
 	LRESULT HookDesktop::OnParentWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
-		if (!g_parentWndProcEvent(message, wParam, lParam))
-			return 1;
+		LRESULT res = 0;
+		if (!g_parentWndProcEvent(message, wParam, lParam, res))
+			return res;
 		return CallWindowProc(g_global.m_oldParentWndProc, hwnd, message, wParam, lParam);
 	}
 

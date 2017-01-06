@@ -15,7 +15,7 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 	cd::g_preDrawBackgroundEvent.AddListener([](HDC&){ return false; }, m_module);
 	cd::g_postDrawBackgroundEvent.AddListener(std::bind(&VideoDesktop::OnPostDrawBackground, this, std::placeholders::_1), m_module);
 	cd::g_fileListWndProcEvent.AddListener(std::bind(&VideoDesktop::OnFileListWndProc, this, std::placeholders::_1,
-		std::placeholders::_2, std::placeholders::_3), m_module);
+		std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), m_module);
 
 	cd::ExecInMainThread([this]{
 		// 初始化播放器
@@ -96,7 +96,7 @@ void VideoDesktop::OnPresent(IMediaSample* mediaSample)
 }
 
 
-bool VideoDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam)
+bool VideoDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
 {
 	if (message == WM_GRAPHNOTIFY)
 	{
@@ -120,6 +120,7 @@ bool VideoDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam)
 				break; // event已被释放
 			}
 		}
+		res = 1;
 		return false;
 	}
 	return true;

@@ -31,5 +31,5 @@ private:
 	bool OnPostDrawBackground(HDC& hdc);
 	void OnPresent(IMediaSample* mediaSample);
 
-	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam);
+	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res);
 };

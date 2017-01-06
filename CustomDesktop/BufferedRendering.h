@@ -40,8 +40,8 @@ namespace cd
 		bool InitDC();
 		bool InitWallpaperDC();
 
-		bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam);
-		bool OnParentWndProc(UINT message, WPARAM wParam, LPARAM lParam);
+		bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res);
+		bool OnParentWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res);
 		bool OnDrawBackground(HDC& hdc);
 		bool PostDrawIcon(HDC& hdc);
 		bool OnFileListBeginPaint(LPPAINTSTRUCT lpPaint, HDC& res);

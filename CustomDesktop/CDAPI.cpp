@@ -58,15 +58,16 @@ namespace cd
 
 
 	// 实现ExecInMainThread
-	static bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam)
+	static bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
 	{
 		if (message == WM_EXEC_FUNCTION)
 		{
 			auto* function = (std::function<void()>*)wParam;
-			if (function != NULL)
+			if (function != NULL && !function->_Empty())
 			{
 				(*function)();
 				delete function;
+				res = 1;
 				return false;
 			}
 		}

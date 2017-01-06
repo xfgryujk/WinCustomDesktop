@@ -37,29 +37,59 @@ BrowserInit::BrowserInit()
 }
 
 
-Browser::Browser(HWND container, SIZE& size) :
-	m_container(container)
+Browser::Browser(HWND container, const RECT& pos) :
+	m_container(container),
+	m_posRect(pos)
 {
 	if (FAILED(OleInitialize(NULL))) return;
 
 	if (FAILED(StgCreateStorageEx(NULL, STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_DIRECT | STGM_CREATE, STGFMT_STORAGE,
 		0, NULL, NULL, IID_IStorage, (void**)&m_storage))) return;
 	if (FAILED(OleCreate(CLSID_WebBrowser, IID_IOleObject, OLERENDER_DRAW, NULL, this, m_storage, (LPVOID*)&m_oleObject))) return;
-
+	if (FAILED(m_oleObject.QueryInterface(&m_oleInPlaceObject))) return;
 	if (FAILED(m_oleObject.QueryInterface(&m_webBrowser))) return;
 	if (FAILED(m_oleObject.QueryInterface(&m_viewObject))) return;
 
-	// 隐藏激活
-	m_posRect = { -32000, -32000, -32000 + size.cx, -32000 + size.cy };
 	if (FAILED(m_oleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, NULL, this, 0, m_container, &m_posRect))) return;
-	if (FAILED(m_oleObject->DoVerb(OLEIVERB_HIDE, NULL, this, 0, m_container, &m_posRect))) return;
 }
 
 Browser::~Browser()
 {
+	if (m_oleObject.p != NULL)
+		m_oleObject->Close(OLECLOSE_NOSAVE);
+
 	OleUninitialize();
 }
 
+
+void Browser::SetPos(const RECT& pos)
+{
+	m_posRect = pos;
+	if (m_oleInPlaceObject.p != NULL)
+		m_oleInPlaceObject->SetObjectRects(&m_posRect, &m_posRect);
+}
+
+//HWND Browser::GetBrowserHwnd()
+//{
+//	if (m_browserHwnd != NULL)
+//		return m_browserHwnd;
+//
+//	HWND hwnd;
+//	if (FAILED(m_oleInPlaceObject->GetWindow(&hwnd)))
+//		return NULL;
+//	EnumChildWindows(hwnd, [](HWND hwnd, LPARAM thiz)->BOOL{
+//		TCHAR className[100];
+//		GetClassName(hwnd, className, _countof(className));
+//		if (_tcscmp(className, _T("Internet Explorer_Server")) == 0)
+//		{
+//			((Browser*)thiz)->m_browserHwnd = hwnd;
+//			return FALSE;
+//		}
+//		return TRUE;
+//	}, (LPARAM)this);
+//
+//	return m_browserHwnd;
+//}
 
 void Browser::Navigate(LPCWSTR url)
 {
@@ -67,10 +97,10 @@ void Browser::Navigate(LPCWSTR url)
 		m_webBrowser->Navigate2(&CComVariant(url), &CComVariant(navNoReadFromCache | navNoWriteToCache), NULL, NULL, NULL);
 }
 
-void Browser::Draw(HDC hdc, LPCRECT dstRect)
+void Browser::Draw(HDC hdc, const RECT& dstRect)
 {
 	if (m_viewObject.p != NULL)
-		m_viewObject->Draw(DVASPECT_CONTENT, -1, NULL, NULL, NULL, hdc, (LPCRECTL)dstRect, NULL, NULL, 0);
+		m_viewObject->Draw(DVASPECT_CONTENT, -1, NULL, NULL, NULL, hdc, (LPCRECTL)&dstRect, NULL, NULL, 0);
 }
 
 
@@ -88,27 +118,20 @@ ULONG STDMETHODCALLTYPE Browser::Release(void)
 
 HRESULT STDMETHODCALLTYPE Browser::QueryInterface(REFIID riid, _COM_Outptr_ void __RPC_FAR *__RPC_FAR *ppvObject)
 {
+	*ppvObject = NULL;
 	if (riid == IID_IUnknown)
-	{
 		*ppvObject = (IUnknown*)(IOleClientSite*)this;
-		return S_OK;
-	}
-	if (riid == IID_IOleClientSite)
-	{
+	else if (riid == IID_IOleClientSite)
 		*ppvObject = (IOleClientSite*)this;
-		return S_OK;
-	}
-	if (riid == IID_IOleWindow)
-	{
-		*ppvObject = (IOleWindow*)this;
-		return S_OK;
-	}
-	if (riid == IID_IOleInPlaceSite)
-	{
+	else if (riid == IID_IOleWindow)
+		*ppvObject = (IOleWindow*)(IOleInPlaceSite*)this;
+	else if (riid == IID_IOleInPlaceSite)
 		*ppvObject = (IOleInPlaceSite*)this;
-		return S_OK;
-	}
-	return E_NOINTERFACE;
+	else if (riid == IID_IOleInPlaceUIWindow)
+		*ppvObject = (IOleInPlaceUIWindow*)this;
+	else if (riid == IID_IOleInPlaceFrame)
+		*ppvObject = (IOleInPlaceFrame*)this;
+	return *ppvObject != NULL ? S_OK : E_NOINTERFACE;
 }
 
 
@@ -222,3 +245,59 @@ HRESULT STDMETHODCALLTYPE Browser::OnPosRectChange(__RPC__in LPCRECT lprcPosRect
 	return S_OK;
 }
 
+
+// IOleInPlaceUIWindow
+
+HRESULT STDMETHODCALLTYPE Browser::GetBorder(__RPC__out LPRECT lprectBorder)
+{
+	*lprectBorder = m_posRect;
+	return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE Browser::RequestBorderSpace(__RPC__in_opt LPCBORDERWIDTHS pborderwidths)
+{
+	return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE Browser::SetBorderSpace(__RPC__in_opt LPCBORDERWIDTHS pborderwidths)
+{
+	return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE Browser::SetActiveObject(__RPC__in_opt IOleInPlaceActiveObject *pActiveObject, __RPC__in_opt_string LPCOLESTR pszObjName)
+{
+	return S_OK;
+}
+
+
+// IOleInPlaceFrame
+
+HRESULT STDMETHODCALLTYPE Browser::InsertMenus(__RPC__in HMENU hmenuShared, __RPC__inout LPOLEMENUGROUPWIDTHS lpMenuWidths)
+{
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE Browser::SetMenu(__RPC__in HMENU hmenuShared, __RPC__in HOLEMENU holemenu, __RPC__in HWND hwndActiveObject)
+{
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE Browser::RemoveMenus(__RPC__in HMENU hmenuShared)
+{
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE Browser::SetStatusText(__RPC__in_opt LPCOLESTR pszStatusText)
+{
+	return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE Browser::EnableModeless(BOOL fEnable)
+{
+	return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE Browser::TranslateAccelerator(__RPC__in LPMSG lpmsg, WORD wID)
+{
+	return S_OK;
+}
