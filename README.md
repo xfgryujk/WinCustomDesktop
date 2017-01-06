@@ -3,13 +3,17 @@ WinCustomDesktop
 
 自绘桌面框架，用你的代码绘制桌面，支持插件开发
 
-目前自带的插件有播放视频、遮罩桌面和WIMC
+目前自带的插件有播放视频、桌面浏览器、遮罩桌面和WIMC
 
 想法来自DreamScene，在Wallpaper Engine出来很早之前就做过类似的了，最近想完善它
 
 ### 播放*Bad Apple*
 
 ![VideoDesktop](https://github.com/xfgryujk/WinCustomDesktop/blob/master/.wiki/image/snapshot_VideoDesktop.gif)
+
+### 桌面浏览器
+
+![DesktopBrowser](https://github.com/xfgryujk/WinCustomDesktop/blob/master/.wiki/image/snapshot_DesktopBrowser.png)
 
 ### 遮罩桌面
 
