@@ -6,7 +6,7 @@
 VideoPlayer::VideoPlayer(LPCWSTR fileName, HRESULT* phr) :
 	CBaseVideoRenderer(CLSID_NULL, _T("Renderer"), NULL, &(*phr = NOERROR))
 {
-	CBaseVideoRenderer::AddRef(); // 防止多次析构
+	AddRef(); // 防止多次析构
 
 	if (FAILED(*phr = m_graph.CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER))) return;
 	if (FAILED(*phr = m_graph.QueryInterface(&m_control))) return;
@@ -42,7 +42,7 @@ VideoPlayer::VideoPlayer(LPCWSTR fileName, HRESULT* phr) :
 
 	// 获取视频尺寸
 	CMediaType mediaType;
-	if (FAILED(*phr = CBaseVideoRenderer::GetPin(0)->ConnectionMediaType(&mediaType))) return;
+	if (FAILED(*phr = GetPin(0)->ConnectionMediaType(&mediaType))) return;
 	if (mediaType.formattype == FORMAT_VideoInfo)
 	{
 		const auto info = reinterpret_cast<VIDEOINFOHEADER*>(mediaType.pbFormat);
@@ -66,8 +66,8 @@ VideoPlayer::VideoPlayer(LPCWSTR fileName, HRESULT* phr) :
 
 VideoPlayer::~VideoPlayer()
 {
-	VideoPlayer::SetNotifyWindow(NULL, 0);
-	VideoPlayer::StopVideo();
+	SetNotifyWindow(NULL, 0);
+	StopVideo();
 }
 
 
@@ -125,7 +125,7 @@ void VideoPlayer::SetVolume(int volume)
 
 void VideoPlayer::SetOnPresent(std::function<void(IMediaSample*)> onPresent)
 {
-	m_onPresent = move(onPresent);
+	m_onPresent = std::move(onPresent);
 }
 
 void VideoPlayer::SetNotifyWindow(HWND hwnd, UINT messageID)
@@ -147,7 +147,7 @@ HRESULT VideoPlayer::CheckMediaType(const CMediaType * mediaType)
 
 HRESULT VideoPlayer::DoRenderSample(IMediaSample *pMediaSample)
 {
-	if (m_onPresent)
+	if (!m_onPresent._Empty())
 		m_onPresent(pMediaSample);
 	return S_OK;
 }

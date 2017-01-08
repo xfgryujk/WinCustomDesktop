@@ -13,12 +13,9 @@ VDConfig::VDConfig()
 
 void VDConfig::LoadConfig(LPCWSTR path)
 {
-	std::wstring strBuf;
-
-	strBuf.resize(MAX_PATH);
-	GetPrivateProfileStringW(APPNAME, L"VideoPath", L"", &strBuf.front(), static_cast<DWORD>(strBuf.size()), path);
-	strBuf.resize(std::char_traits<wchar_t>::length(strBuf.c_str()));
-	m_videoPath = move(strBuf);
+	m_videoPath.resize(MAX_PATH);
+	GetPrivateProfileStringW(APPNAME, L"VideoPath", L"", &m_videoPath.front(), static_cast<DWORD>(m_videoPath.size()), path);
+	m_videoPath.resize(wcslen(m_videoPath.c_str()));
 
 	m_volume = GetPrivateProfileIntW(APPNAME, L"Volume", m_volume, path);
 }
