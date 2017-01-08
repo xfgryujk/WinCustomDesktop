@@ -8,15 +8,6 @@
 #include <random>
 
 
-namespace
-{
-	float GetRandomFloat(float min, float max)
-	{
-		static std::random_device s_randomDevice{};
-		return std::uniform_real_distribution<float>{ min, max }(s_randomDevice);
-	}
-}
-
 WIMC::WIMC(HMODULE hModule) : 
 	m_module(hModule)
 {
@@ -34,17 +25,18 @@ WIMC::WIMC(HMODULE hModule) :
 
 bool WIMC::OnPostDrawIcon(HDC& hdc)
 {
-	CURSORINFO info{ sizeof(CURSORINFO) };
+	CURSORINFO info;
+	info.cbSize = sizeof(info);
 	if (!GetCursorInfo(&info))
 		return true;
 
 	const auto& pos = info.ptScreenPos;
-	const auto distance = sqrtf(float((pos.x - m_cursorOrigin.x) * (pos.x - m_cursorOrigin.x) 
+	const float distance = sqrtf(float((pos.x - m_cursorOrigin.x) * (pos.x - m_cursorOrigin.x) 
 		+ (pos.y - m_cursorOrigin.y) * (pos.y - m_cursorOrigin.y)));
-	const auto angle = atan2f(float(pos.y - m_cursorOrigin.y), float(pos.x - m_cursorOrigin.x));
+	const float angle = atan2f(float(pos.y - m_cursorOrigin.y), float(pos.x - m_cursorOrigin.x));
 
-	const auto width = GetSystemMetrics(SM_CXCURSOR);
-	const auto height = GetSystemMetrics(SM_CYCURSOR);
+	const int width = GetSystemMetrics(SM_CXCURSOR);
+	const int height = GetSystemMetrics(SM_CYCURSOR);
 
 	for (auto& i : m_fakeCursors)
 		i.Draw(hdc, info.hCursor, distance, angle, width, height);
@@ -52,9 +44,19 @@ bool WIMC::OnPostDrawIcon(HDC& hdc)
 	return true;
 }
 
+
+namespace
+{
+	float GetRandomFloat(float min, float max)
+	{
+		static std::random_device s_randomDevice;
+		return std::uniform_real_distribution<float>(min, max)(s_randomDevice);
+	}
+}
+
 WIMC::FakeCursor::FakeCursor()
 {
-	SIZE size{};
+	SIZE size;
 	cd::GetDesktopSize(size);
 	origin.x = static_cast<int>(GetRandomFloat(-size.cx * 0.75f, size.cx * 1.75f));
 	origin.y = static_cast<int>(GetRandomFloat(-size.cy * 0.75f, size.cy * 1.75f));

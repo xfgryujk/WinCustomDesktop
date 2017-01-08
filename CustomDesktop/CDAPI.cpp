@@ -63,7 +63,7 @@ namespace cd
 		if (message == WM_EXEC_FUNCTION)
 		{
 			const auto function = reinterpret_cast<std::function<void()>*>(wParam);
-			if (function && *function)
+			if (function != nullptr && !function->_Empty())
 			{
 				(*function)();
 				delete function;

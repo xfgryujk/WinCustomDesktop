@@ -65,7 +65,7 @@ bool MaskDesktop::OnPostDrawIcon(HDC& hdc)
 
 	m_img.AlphaBlend(hdc, m_curPos.x - g_config.m_size / 2, m_curPos.y - g_config.m_size / 2);
 
-	const auto brush = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
+	const HBRUSH brush = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
 	SIZE scrSize;
 	cd::GetDesktopSize(scrSize);
 	RECT rect;
