@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include <vector>
 
-
 class WIMC final
 {
 public:

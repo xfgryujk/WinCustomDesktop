@@ -2,6 +2,7 @@
 #include "VideoDesktop.h"
 #include <CDEvents.h>
 #include <CDAPI.h>
+#include <iterator>
 #include "VDConfig.h"
 
 
@@ -37,9 +38,6 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 
 VideoDesktop::~VideoDesktop()
 {
-	// 优先释放players！
-	for (auto& i : m_players)
-		i = nullptr;
 }
 
 bool VideoDesktop::InitPlayer(std::unique_ptr<VideoPlayer>& player)
@@ -48,7 +46,6 @@ bool VideoDesktop::InitPlayer(std::unique_ptr<VideoPlayer>& player)
 	player = std::make_unique<VideoPlayer>(g_config.m_videoPath.c_str(), &hr);
 	if (FAILED(hr))
 	{
-		player = nullptr;
 		MessageBox(NULL, _T("加载视频失败！"), APPNAME, MB_ICONERROR);
 		return false;
 	}
@@ -100,7 +97,7 @@ bool VideoDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam,
 {
 	if (message == WM_GRAPHNOTIFY)
 	{
-		auto event = (IMediaEventEx*)lParam;
+		auto event = reinterpret_cast<IMediaEventEx*>(lParam);
 		long eventCode;
 		LONG_PTR lParam1, lParam2;
 		while (SUCCEEDED(event->GetEvent(&eventCode, &lParam1, &lParam2, 0)))
@@ -110,8 +107,8 @@ bool VideoDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam,
 			// 播放完毕
 			if (eventCode == EC_COMPLETE)
 			{
-				int prevPlayerIndex = m_curPlayerIndex;
-				if (++m_curPlayerIndex >= _countof(m_players))
+				const auto prevPlayerIndex = m_curPlayerIndex;
+				if (static_cast<size_t>(++m_curPlayerIndex) >= std::size(m_players))
 					m_curPlayerIndex = 0;
 				m_curPlayer = m_players[m_curPlayerIndex].get();
 				m_curPlayer->RunVideo();

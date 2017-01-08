@@ -28,7 +28,7 @@ bool MaskDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, 
 {
 	if (message == WM_MOUSEMOVE)
 	{
-		POINTS lastPos = m_curPos;
+		const auto lastPos = m_curPos;
 		m_curPos = MAKEPOINTS(lParam);
 
 		RECT rect;
@@ -65,7 +65,7 @@ bool MaskDesktop::OnPostDrawIcon(HDC& hdc)
 
 	m_img.AlphaBlend(hdc, m_curPos.x - g_config.m_size / 2, m_curPos.y - g_config.m_size / 2);
 
-	HBRUSH brush = (HBRUSH)GetStockObject(BLACK_BRUSH);
+	const auto brush = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
 	SIZE scrSize;
 	cd::GetDesktopSize(scrSize);
 	RECT rect;

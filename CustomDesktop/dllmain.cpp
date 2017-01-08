@@ -14,7 +14,7 @@ using namespace cd;
 namespace
 {
 	// 准备卸载的消息，由Inject.exe发送
-	static const UINT WM_PREUNLOAD = WM_APP + 999;
+	constexpr UINT WM_PREUNLOAD = WM_APP + 999;
 
 
 	LPTOP_LEVEL_EXCEPTION_FILTER g_oldExceptionHandler = NULL;
@@ -94,8 +94,8 @@ namespace
 }
 
 BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
+					   DWORD  ul_reason_for_call,
+					   LPVOID lpReserved
 					 )
 {
 	switch (ul_reason_for_call)

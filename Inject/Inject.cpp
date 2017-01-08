@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include <tlhelp32.h>
+#include <iosfwd>
 
 
 const UINT WM_PREUNLOAD = WM_APP + 999;
@@ -40,51 +41,54 @@ BOOL EnablePrivilege(BOOL enable)
 HMODULE InjectDll(HANDLE process, LPCTSTR dllPath)
 {
 	DWORD remoteModule = 0;
-	DWORD dllPathSize = ((DWORD)_tcslen(dllPath) + 1) * sizeof(TCHAR);
+	const auto dllPathSize = (static_cast<DWORD>(std::char_traits<TCHAR>::length(dllPath)) + 1) * sizeof(TCHAR);
 
 	// 申请内存用来存放DLL路径
-	void* remoteMemory = VirtualAllocEx(process, NULL, dllPathSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+	const auto remoteMemory = VirtualAllocEx(process, NULL, dllPathSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	if (remoteMemory == NULL)
 	{
 		printf("申请内存失败，错误代码：%u\n", GetLastError());
 		return NULL;
 	}
 
-	// 写入DLL路径
-	if (!WriteProcessMemory(process, remoteMemory, dllPath, dllPathSize, NULL))
+	do
 	{
-		printf("写入内存失败，错误代码：%u\n", GetLastError());
-		goto Free;
-	}
+		// 写入DLL路径
+		if (!WriteProcessMemory(process, remoteMemory, dllPath, dllPathSize, NULL))
+		{
+			printf("写入内存失败，错误代码：%u\n", GetLastError());
+			break;
+		}
 
-	// 创建远线程调用LoadLibrary
-	HANDLE remoteThread = CreateRemoteThread(process, NULL, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, remoteMemory, 0, NULL);
-	if (remoteThread == NULL)
-	{
-		printf("创建远线程失败，错误代码：%u\n", GetLastError());
-		goto Free;
-	}
-	// 等待远线程结束
-	WaitForSingleObject(remoteThread, INFINITE);
-	// 取DLL在目标进程的句柄
-	if (!GetExitCodeThread(remoteThread, &remoteModule))
-		remoteModule = 0;
-	if (remoteModule == 0)
-		printf("注入失败\n");
+		// 创建远线程调用LoadLibrary
+		const auto remoteThread = CreateRemoteThread(process, NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(LoadLibrary), remoteMemory, 0, NULL);
+		if (remoteThread == NULL)
+		{
+			printf("创建远线程失败，错误代码：%u\n", GetLastError());
+			break;
+		}
+		// 等待远线程结束
+		WaitForSingleObject(remoteThread, INFINITE);
+		// 取DLL在目标进程的句柄
+		if (!GetExitCodeThread(remoteThread, &remoteModule))
+			remoteModule = 0;
+		if (remoteModule == 0)
+			printf("注入失败\n");
 
-	// 释放
-	CloseHandle(remoteThread);
-Free:
+		// 释放
+		CloseHandle(remoteThread);
+	} while (false);
+
 	VirtualFreeEx(process, remoteMemory, 0, MEM_RELEASE);
 
-	return (HMODULE)remoteModule;
+	return reinterpret_cast<HMODULE>(remoteModule);
 }
 
 // 卸载DLL
 BOOL FreeRemoteDll(HANDLE process, HMODULE remoteModule)
 {
 	// 创建远线程调用FreeLibrary
-	HANDLE remoteThread = CreateRemoteThread(process, NULL, 0, (LPTHREAD_START_ROUTINE)FreeLibrary, (LPVOID)remoteModule, 0, NULL);
+	const auto remoteThread = CreateRemoteThread(process, NULL, 0, (LPTHREAD_START_ROUTINE)FreeLibrary, (LPVOID)remoteModule, 0, NULL);
 	if (remoteThread == NULL)
 	{
 		printf("创建远线程失败，错误代码：%u\n", GetLastError());
@@ -107,13 +111,13 @@ BOOL FreeRemoteDll(HANDLE process, HMODULE remoteModule)
 // 取其他进程模块句柄
 HMODULE GetRemoteModuleHandle(DWORD pid, LPCTSTR moduleName)
 {
-	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid);
+	const auto snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid);
 	MODULEENTRY32 moduleentry;
 	moduleentry.dwSize = sizeof(moduleentry);
 
-	BOOL hasNext = Module32First(snapshot, &moduleentry);
+	auto hasNext = Module32First(snapshot, &moduleentry);
 	HMODULE handle = NULL;
-	do
+	while (hasNext)
 	{
 		if (_tcsicmp(moduleentry.szModule, moduleName) == 0)
 		{
@@ -121,7 +125,7 @@ HMODULE GetRemoteModuleHandle(DWORD pid, LPCTSTR moduleName)
 			break;
 		}
 		hasNext = Module32Next(snapshot, &moduleentry);
-	} while (hasNext);
+	}
 
 	CloseHandle(snapshot);
 	return handle;
@@ -132,10 +136,10 @@ HWND GetDesktopTopHwnd()
 {
 	HWND topHwnd = NULL;
 	EnumWindows([](HWND hwnd, LPARAM pTopHwnd)->BOOL{
-		HWND parentWnd = FindWindowEx(hwnd, NULL, _T("SHELLDLL_DefView"), _T(""));
+		const auto parentWnd = FindWindowEx(hwnd, NULL, _T("SHELLDLL_DefView"), _T(""));
 		if (parentWnd != NULL && FindWindowEx(parentWnd, NULL, _T("SysListView32"), _T("FolderView")) != NULL)
 		{
-			*(HWND*)pTopHwnd = hwnd;
+			*reinterpret_cast<HWND*>(pTopHwnd) = hwnd;
 			return FALSE;
 		}
 		return TRUE;
@@ -149,10 +153,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	EnablePrivilege(TRUE);
 
 	// 打开进程
-	HWND hwnd = FindWindow(_T("Progman"), _T("Program Manager"));
+	const auto hwnd = FindWindow(_T("Progman"), _T("Program Manager"));
 	DWORD pid;
 	GetWindowThreadProcessId(hwnd, &pid);
-	HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	const auto process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	if (process == NULL)
 	{
 		printf("打开进程失败，错误代码：%u\n", GetLastError());
@@ -166,7 +170,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		puts("卸载DLL");
 
 		// 发消息卸载所有插件
-		HWND hwnd = GetDesktopTopHwnd();
+		auto hwnd = GetDesktopTopHwnd();
 		hwnd = FindWindowEx(hwnd, NULL, _T("SHELLDLL_DefView"), _T(""));
 		hwnd = FindWindowEx(hwnd, NULL, _T("SysListView32"), _T("FolderView"));
 		SendMessage(hwnd, WM_PREUNLOAD, NULL, NULL);
