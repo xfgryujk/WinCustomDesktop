@@ -3,7 +3,7 @@
 #include <functional>
 
 
-class VideoPlayer : private CBaseVideoRenderer
+class VideoPlayer : CBaseVideoRenderer
 {
 public:
 	VideoPlayer(LPCWSTR fileName, HRESULT* phr);
