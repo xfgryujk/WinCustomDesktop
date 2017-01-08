@@ -7,7 +7,7 @@
 #include <functional>
 
 
-constexpr UINT WM_PREUNLOAD = WM_APP + 999;
+const UINT WM_PREUNLOAD = WM_APP + 999;
 
 
 
@@ -45,7 +45,7 @@ HMODULE InjectDll(HANDLE process, LPCTSTR dllPath)
 	const SIZE_T dllPathSize = static_cast<SIZE_T>(_tcslen(dllPath) + 1) * sizeof(TCHAR);
 
 	// 申请内存用来存放DLL路径
-	std::unique_ptr<void, std::function<void*> > remoteMemory(nullptr, [process](void* p){
+	std::unique_ptr<void, std::function<void(void*)> > remoteMemory(nullptr, [process](void* p){
 		VirtualFreeEx(process, p, 0, MEM_RELEASE);
 	});
 	remoteMemory.reset(VirtualAllocEx(process, NULL, dllPathSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE));
