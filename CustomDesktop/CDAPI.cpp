@@ -38,40 +38,59 @@ namespace cd
 	}
 
 
-	CD_API std::wstring WINAPI GetPluginDir()
-	{
-		return g_global.m_cdDir + L"Plugin\\";
-	}
-
-	CD_API UINT WINAPI GetCustomMessageID()
+	CD_API UINT WINAPI GetFileListMsgID()
 	{
 		static UINT s_nextMsgID = WM_APP + 1000;
 		return s_nextMsgID++;
 	}
 
-	static const UINT WM_EXEC_FUNCTION = GetCustomMessageID();
+	CD_API UINT WINAPI GetParentMsgID()
+	{
+		static UINT s_nextMsgID = WM_APP + 1000;
+		return s_nextMsgID++;
+	}
+
+	CD_API UINT WINAPI GetTopMsgID()
+	{
+		static UINT s_nextMsgID = WM_APP + 1000;
+		return s_nextMsgID++;
+	}
+
+	CD_API UINT WINAPI GetMenuID()
+	{
+		static UINT s_nextMenuID = 100;
+		return s_nextMenuID++;
+	}
+
+
+	CD_API std::wstring WINAPI GetPluginDir()
+	{
+		return g_global.m_cdDir + L"Plugin\\";
+	}
+
+	static const UINT WM_EXEC_FUNCTION = GetFileListMsgID();
 
 	CD_API void WINAPI ExecInMainThread(std::function<void()> function)
 	{
-		PostMessage(g_global.m_fileListWnd, WM_EXEC_FUNCTION, (WPARAM)new std::function<void()>(std::move(function)), NULL);
+		PostMessage(g_global.m_fileListWnd, WM_EXEC_FUNCTION, reinterpret_cast<WPARAM>(
+			new decltype(function)(std::move(function))), NULL);
 	}
 
 
 	// 实现ExecInMainThread
 	static bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
 	{
-		if (message == WM_EXEC_FUNCTION)
+		if (message != WM_EXEC_FUNCTION)
+			return true;
+
+		const auto function = reinterpret_cast<std::function<void()>*>(wParam);
+		if (function != nullptr && !function->_Empty())
 		{
-			const auto function = reinterpret_cast<std::function<void()>*>(wParam);
-			if (function != nullptr && !function->_Empty())
-			{
-				(*function)();
-				delete function;
-				res = 1;
-				return false;
-			}
+			(*function)();
+			delete function;
+			res = 1;
 		}
-		return true;
+		return false;
 	}
 
 	CDAPIModule::CDAPIModule()

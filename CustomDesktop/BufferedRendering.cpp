@@ -116,7 +116,7 @@ namespace cd
 		wallpaperPath.resize(MAX_PATH);
 		DWORD type = 0;
 		DWORD size = DWORD(wallpaperPath.size() * sizeof(WCHAR));
-		if (RegQueryValueExW(key, L"WallPaper", NULL, &type, (LPBYTE)wallpaperPath.c_str(), &size) != ERROR_SUCCESS
+		if (RegQueryValueExW(key, L"WallPaper", NULL, &type, (LPBYTE)&wallpaperPath.front(), &size) != ERROR_SUCCESS
 			|| type != REG_SZ)
 		{
 			RegCloseKey(key);

@@ -7,7 +7,7 @@
 
 VideoDesktop::VideoDesktop(HMODULE hModule) : 
 	m_module(hModule), 
-	WM_GRAPHNOTIFY(cd::GetCustomMessageID())
+	WM_GRAPHNOTIFY(cd::GetFileListMsgID())
 {
 	// 监听事件
 	cd::g_desktopCoveredEvent.AddListener([this]{ m_curPlayer->PauseVideo(); return true; }, m_module);

@@ -75,6 +75,12 @@
     <ClInclude Include="CheckCovered.h">
       <Filter>头文件\Module</Filter>
     </ClInclude>
+    <ClInclude Include="TrayMenu.h">
+      <Filter>头文件\Module</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -104,5 +110,18 @@
     <ClCompile Include="CheckCovered.cpp">
       <Filter>源文件\Module</Filter>
     </ClCompile>
+    <ClCompile Include="TrayMenu.cpp">
+      <Filter>源文件\Module</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="CustomDesktop.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\TrayIcon.ico">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>

@@ -20,6 +20,7 @@ namespace cd
 		// 原窗口过程
 		WNDPROC m_oldFileListWndProc = NULL;
 		WNDPROC m_oldParentWndProc = NULL;
+		WNDPROC m_oldTopWndProc = NULL;
 
 		// XP有两个comctl32，所以需要获取所有comctl32句柄
 		std::vector<HMODULE> m_comctlModules;

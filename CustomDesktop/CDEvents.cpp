@@ -10,6 +10,10 @@ namespace cd
 	CD_API DEF_VARIABLE(g_preUnloadEvent);
 	CD_API DEF_VARIABLE(g_desktopCoveredEvent);
 	CD_API DEF_VARIABLE(g_desktopUncoveredEvent);
+	CD_API DEF_VARIABLE(g_fileListWndSizeEvent);
+
+	CD_API DEF_VARIABLE(g_appendTrayMenuEvent);
+	CD_API DEF_VARIABLE(g_chooseMenuItemEvent);
 
 	CD_API DEF_VARIABLE(g_preDrawBackgroundEvent);
 	CD_API DEF_VARIABLE(g_postDrawBackgroundEvent);
@@ -19,9 +23,9 @@ namespace cd
 	CD_API DEF_VARIABLE(g_fileListBeginPaintEvent);
 	CD_API DEF_VARIABLE(g_fileListEndPaintEvent);
 
-	CD_API DEF_VARIABLE(g_fileListWndSizeEvent);
 	CD_API DEF_VARIABLE(g_fileListWndProcEvent);
 	CD_API DEF_VARIABLE(g_parentWndProcEvent);
+	CD_API DEF_VARIABLE(g_topWndProcEvent);
 
 
 	// 外部模块可注册的事件集合，用来自动卸载外部listener
@@ -29,6 +33,10 @@ namespace cd
 		&g_preUnloadEvent,
 		&g_desktopCoveredEvent,
 		&g_desktopUncoveredEvent,
+		&g_fileListWndSizeEvent,
+
+		&g_appendTrayMenuEvent,
+		&g_chooseMenuItemEvent,
 
 		&g_preDrawBackgroundEvent,
 		&g_postDrawBackgroundEvent,
@@ -38,8 +46,8 @@ namespace cd
 		&g_fileListBeginPaintEvent,
 		&g_fileListEndPaintEvent,
 
-		&g_fileListWndSizeEvent,
 		&g_fileListWndProcEvent,
-		&g_parentWndProcEvent
+		&g_parentWndProcEvent,
+		&g_topWndProcEvent
 	};
 }

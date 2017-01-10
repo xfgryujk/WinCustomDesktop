@@ -7,16 +7,19 @@
 #include "CDAPIModule.h"
 #include "PluginManager.h"
 #include "CheckCovered.h"
+#include "TrayMenu.h"
 #include <CDEvents.h>
 using namespace cd;
 
 
+namespace cd
+{
+	// 准备卸载的消息，由Inject.exe或选择退出菜单项时发送
+	extern const UINT WM_PREUNLOAD = WM_APP + 999;
+}
+
 namespace
 {
-	// 准备卸载的消息，由Inject.exe发送
-	const UINT WM_PREUNLOAD = WM_APP + 999;
-
-
 	LPTOP_LEVEL_EXCEPTION_FILTER g_oldExceptionHandler = NULL;
 
 	// 异常处理
@@ -75,7 +78,7 @@ namespace
 		g_global.m_cdModule = hModule;
 		// 取dll路径
 		g_global.m_cdDir.resize(MAX_PATH);
-		GetModuleFileNameW(hModule, (LPWSTR)g_global.m_cdDir.c_str(), (DWORD)g_global.m_cdDir.size());
+		GetModuleFileNameW(hModule, &g_global.m_cdDir.front(), (DWORD)g_global.m_cdDir.size());
 		g_global.m_cdDir.resize(wcslen(g_global.m_cdDir.c_str()));
 		size_t pos = g_global.m_cdDir.rfind(L'\\');
 		if (pos != std::string::npos)
@@ -88,6 +91,7 @@ namespace
 		InitModule(CDAPIModule)
 		InitModule(PluginManager)
 		InitModule(CheckCovered)
+		InitModule(TrayMenu)
 
 		return true;
 	}

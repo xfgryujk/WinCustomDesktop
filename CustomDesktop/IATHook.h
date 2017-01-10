@@ -4,7 +4,7 @@
 namespace cd
 {
 	template<class FunctionType>
-	class CIATHook final
+	class IATHook final
 	{
 	private:
 		FunctionType* m_importAddress = NULL;
@@ -75,7 +75,7 @@ namespace cd
 		const FunctionType m_oldEntry = NULL;
 
 
-		CIATHook(HANDLE hookModule, LPCSTR moduleName, LPCSTR functionName, FunctionType hookFunction, bool enable = true) :
+		IATHook(HANDLE hookModule, LPCSTR moduleName, LPCSTR functionName, FunctionType hookFunction, bool enable = true) :
 			m_importAddress(FindImportAddress(hookModule, moduleName, functionName)),
 			m_hookFunction(hookFunction), 
 			m_oldEntry(m_importAddress != NULL ? *m_importAddress : NULL)
@@ -87,7 +87,7 @@ namespace cd
 				Enable();
 		}
 
-		CIATHook(CIATHook& other) :
+		IATHook(IATHook& other) :
 			m_importAddress(other.m_importAddress),
 			m_hookFunction(other.m_hookFunction),
 			m_isEnabled(other.m_isEnabled),
@@ -97,7 +97,7 @@ namespace cd
 			other.m_isEnabled = false;
 		}
 
-		~CIATHook()
+		~IATHook()
 		{
 			Disable();
 		}
