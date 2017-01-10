@@ -31,6 +31,12 @@
     <Filter Include="源文件\Module">
       <UniqueIdentifier>{d3fc6086-9e93-447f-af58-2816804e8378}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\GUI">
+      <UniqueIdentifier>{53b931ae-367b-43eb-b7a4-68830d7c0206}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\GUI">
+      <UniqueIdentifier>{c4185cc6-fff6-4fb1-ab20-6a8947a270ff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -81,12 +87,15 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="PluginDlg.h">
+      <Filter>头文件\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomDesktop.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="CDEvents.cpp">
@@ -112,6 +121,12 @@
     </ClCompile>
     <ClCompile Include="TrayMenu.cpp">
       <Filter>源文件\Module</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginDlg.cpp">
+      <Filter>源文件\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomDesktop.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

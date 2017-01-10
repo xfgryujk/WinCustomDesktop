@@ -49,7 +49,7 @@ bool VideoDesktop::InitPlayer(std::unique_ptr<VideoPlayer>& player)
 	if (FAILED(hr))
 	{
 		player = nullptr;
-		MessageBox(NULL, _T("加载视频失败！"), APPNAME, MB_ICONERROR);
+		MessageBox(cd::GetTopHwnd(), _T("加载视频失败！"), APPNAME, MB_ICONERROR);
 		return false;
 	}
 

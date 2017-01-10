@@ -9,9 +9,6 @@
 
 namespace cd
 {
-	extern const UINT WM_PREUNLOAD;
-
-
 	TrayMenu::TrayMenu() :
 		m_trayData(),
 		m_exitMenuID(GetMenuID())

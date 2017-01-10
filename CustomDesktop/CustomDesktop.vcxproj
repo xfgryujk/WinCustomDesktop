@@ -29,12 +29,14 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120_xp</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -42,6 +44,7 @@
     <PlatformToolset>v120_xp</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -49,6 +52,7 @@
     <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -162,9 +166,11 @@
     <ClInclude Include="BufferedRendering.h" />
     <ClInclude Include="CDAPIModule.h" />
     <ClInclude Include="CheckCovered.h" />
+    <ClInclude Include="CustomDesktop.h" />
     <ClInclude Include="Global.h" />
     <ClInclude Include="HookDesktop.h" />
     <ClInclude Include="IATHook.h" />
+    <ClInclude Include="PluginDlg.h" />
     <ClInclude Include="PluginManager.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Singleton.h" />
@@ -178,7 +184,7 @@
     <ClCompile Include="CheckCovered.cpp" />
     <ClCompile Include="Global.cpp" />
     <ClCompile Include="HookDesktop.cpp" />
-    <ClCompile Include="dllmain.cpp">
+    <ClCompile Include="CustomDesktop.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -193,6 +199,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="CDEvents.cpp" />
+    <ClCompile Include="PluginDlg.cpp" />
     <ClCompile Include="PluginManager.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

@@ -23,7 +23,7 @@ namespace cd
 			_RPTFW1(_CRT_WARN, L"加载插件失败：%s\n", path);
 			std::wostringstream oss;
 			oss << L"加载插件失败" << path;
-			MessageBoxW(NULL, oss.str().c_str(), L"CustomDesktop", MB_OK);
+			MessageBoxW(g_global.m_topWnd, oss.str().c_str(), L"CustomDesktop", MB_OK);
 			return false;
 		}
 
