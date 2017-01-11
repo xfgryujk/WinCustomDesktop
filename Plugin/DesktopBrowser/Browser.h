@@ -15,7 +15,7 @@ private:
 class Browser : protected IOleClientSite, protected IOleInPlaceSite, protected IOleInPlaceFrame
 {
 public:
-	Browser(HWND container, const RECT& pos);
+	Browser(HWND container, const RECT& pos, HRESULT& hr);
 	virtual ~Browser();
 
 	void SetPos(const RECT& pos);

@@ -13,6 +13,8 @@ DesktopBrowser::DesktopBrowser(HMODULE hModule) :
 		std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), m_module);
 	cd::g_postDrawBackgroundEvent.AddListener(std::bind(&DesktopBrowser::OnPostDrawBackground, this, std::placeholders::_1), m_module);
 	cd::g_fileListWndSizeEvent.AddListener([this](int width, int height){
+		if (m_browser == nullptr)
+			return true;
 		RECT pos = { 0, 0, width, height };
 		m_browser->SetPos(pos);
 		return true;
@@ -25,7 +27,14 @@ DesktopBrowser::DesktopBrowser(HMODULE hModule) :
 		SIZE size;
 		cd::GetDesktopSize(size);
 		RECT pos = { 0, 0, size.cx, size.cy };
-		m_browser = std::make_unique<Browser>(cd::GetParentHwnd(), pos);
+		HRESULT hr;
+		m_browser = std::make_unique<Browser>(cd::GetParentHwnd(), pos, hr);
+		if (FAILED(hr))
+		{
+			MessageBox(cd::GetTopHwnd(), _T("加载浏览器失败！"), APPNAME, MB_ICONERROR);
+			m_browser = nullptr;
+			return;
+		}
 		m_browser->Navigate(g_config.m_homePage.c_str());
 
 		// 创建一个线程以30fps速率刷新，没什么好办法了

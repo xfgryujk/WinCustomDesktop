@@ -37,20 +37,23 @@ BrowserInit::BrowserInit()
 }
 
 
-Browser::Browser(HWND container, const RECT& pos) :
+Browser::Browser(HWND container, const RECT& pos, HRESULT& hr) :
 	m_container(container),
 	m_posRect(pos)
 {
-	if (FAILED(OleInitialize(NULL))) return;
+	hr = S_OK;
+	if (FAILED(hr = OleInitialize(NULL))) return;
 
-	if (FAILED(StgCreateStorageEx(NULL, STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_DIRECT | STGM_CREATE, STGFMT_STORAGE,
+	if (FAILED(hr = StgCreateStorageEx(NULL, STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_DIRECT | STGM_CREATE, STGFMT_STORAGE,
 		0, NULL, NULL, IID_IStorage, (void**)&m_storage))) return;
-	if (FAILED(OleCreate(CLSID_WebBrowser, IID_IOleObject, OLERENDER_DRAW, NULL, this, m_storage, (LPVOID*)&m_oleObject))) return;
-	if (FAILED(m_oleObject.QueryInterface(&m_oleInPlaceObject))) return;
-	if (FAILED(m_oleObject.QueryInterface(&m_webBrowser))) return;
-	if (FAILED(m_oleObject.QueryInterface(&m_viewObject))) return;
+	if (FAILED(hr = OleCreate(CLSID_WebBrowser, IID_IOleObject, OLERENDER_DRAW, NULL, this, m_storage, (LPVOID*)&m_oleObject))) return;
+	if (FAILED(hr = m_oleObject.QueryInterface(&m_oleInPlaceObject))) return;
+	if (FAILED(hr = m_oleObject.QueryInterface(&m_webBrowser))) return;
+	if (FAILED(hr = m_oleObject.QueryInterface(&m_viewObject))) return;
 
-	if (FAILED(m_oleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, NULL, this, 0, m_container, &m_posRect))) return;
+	if (FAILED(hr = m_oleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, NULL, this, 0, m_container, &m_posRect))) return;
+
+	Navigate(L"about:blank");
 }
 
 Browser::~Browser()
