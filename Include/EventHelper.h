@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <functional>
 #include <map>
+#include <vector>
 
 
 namespace cd
@@ -30,6 +31,10 @@ namespace cd
 		std::map<int, Listener, KeyCmp> m_listeners;
 		int m_nextListenerID = 0;
 
+		bool m_isIterating = false;
+		// 将要删除的listener ID，在迭代完成后删除
+		std::vector<int> m_indexesToDelete;
+
 
 	public:
 		// 返回listener ID，如果指定module则在MOD卸载时会自动删除，否则需要手动删除
@@ -44,7 +49,10 @@ namespace cd
 
 		void DeleteListener(int listenerID)
 		{
-			m_listeners.erase(listenerID);
+			if (!m_isIterating)
+				m_listeners.erase(listenerID);
+			else
+				m_indexesToDelete.push_back(listenerID);
 		}
 
 		void DeleteListenersOfModule(HMODULE module)
@@ -63,8 +71,15 @@ namespace cd
 		{
 			// 按原来的写法32位版会被迷之优化掉，返回false后面的函数不会被调用...
 			volatile bool res = true;
+
+			m_isIterating = true;
 			for (const auto& i : m_listeners)
 				res = res && i.second.m_function(std::forward<ArgTypes>(args)...);
+			m_isIterating = false;
+
+			for (auto i : m_indexesToDelete)
+				DeleteListener(i);
+
 			return res;
 		}
 	};

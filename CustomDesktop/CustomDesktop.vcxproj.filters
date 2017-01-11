@@ -37,6 +37,9 @@
     <Filter Include="源文件\GUI">
       <UniqueIdentifier>{c4185cc6-fff6-4fb1-ab20-6a8947a270ff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\Helper\GUI">
+      <UniqueIdentifier>{c657b3be-6b58-4054-9c11-9325c7e0a632}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -92,6 +95,9 @@
     </ClInclude>
     <ClInclude Include="CustomDesktop.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelessDlg.h">
+      <Filter>头文件\Helper\GUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

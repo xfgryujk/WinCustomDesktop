@@ -166,6 +166,7 @@
     <ClInclude Include="BufferedRendering.h" />
     <ClInclude Include="CDAPIModule.h" />
     <ClInclude Include="CheckCovered.h" />
+    <ClInclude Include="ModelessDlg.h" />
     <ClInclude Include="CustomDesktop.h" />
     <ClInclude Include="Global.h" />
     <ClInclude Include="HookDesktop.h" />
@@ -218,4 +219,9 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="CustomDesktop.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

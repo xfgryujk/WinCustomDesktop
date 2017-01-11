@@ -5,12 +5,14 @@
 #include "Global.h"
 #include <CDAPI.h>
 #include <CDEvents.h>
+#include "PluginDlg.h"
 
 
 namespace cd
 {
 	TrayMenu::TrayMenu() :
 		m_trayData(),
+		m_managePluginMenuID(GetMenuID()),
 		m_exitMenuID(GetMenuID())
 	{
 		m_trayData.cbSize = sizeof(m_trayData);
@@ -36,14 +38,7 @@ namespace cd
 		Shell_NotifyIcon(NIM_ADD, &m_trayData);
 		g_fileListWndProcEvent.AddListener(std::bind(&TrayMenu::OnFileListWndProc, this, std::placeholders::_1, std::placeholders::_2,
 			std::placeholders::_3, std::placeholders::_4));
-		// 退出
-		g_chooseMenuItemEvent.AddListener([this](UINT menuID){
-			if (menuID != m_exitMenuID)
-				return true;
-			SendMessage(g_global.m_fileListWnd, WM_PREUNLOAD, NULL, NULL);
-			CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)FreeLibrary, g_global.m_cdModule, 0, NULL);
-			return false;
-		});
+		g_chooseMenuItemEvent.AddListener(std::bind(&TrayMenu::OnChooseMenuItem, this, std::placeholders::_1));
 		return true;
 	}
 
@@ -64,6 +59,7 @@ namespace cd
 			HMENU menu = CreatePopupMenu();
 			g_appendTrayMenuEvent(menu);
 			AppendMenu(menu, MF_SEPARATOR, 0, NULL);
+			AppendMenu(menu, MF_STRING, m_managePluginMenuID, _T("插件管理"));
 			AppendMenu(menu, MF_STRING, m_exitMenuID, _T("退出"));
 
 			POINT pos;
@@ -79,6 +75,22 @@ namespace cd
 		else if (message == WM_COMMAND && HIWORD(wParam) == 0) // 选择菜单项
 		{
 			return g_chooseMenuItemEvent(LOWORD(wParam));
+		}
+		return true;
+	}
+
+	bool TrayMenu::OnChooseMenuItem(UINT menuID)
+	{
+		if (menuID == m_managePluginMenuID) // 插件管理
+		{
+			CPluginDlg::CreateInstance();
+			return false;
+		}
+		else if (menuID == m_exitMenuID) // 退出
+		{
+			SendMessage(g_global.m_fileListWnd, WM_PREUNLOAD, NULL, NULL);
+			CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)FreeLibrary, g_global.m_cdModule, 0, NULL);
+			return false;
 		}
 		return true;
 	}

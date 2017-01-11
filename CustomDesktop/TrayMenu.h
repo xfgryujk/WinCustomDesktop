@@ -20,9 +20,11 @@ namespace cd
 
 
 		NOTIFYICONDATA m_trayData;
+		UINT m_managePluginMenuID;
 		UINT m_exitMenuID;
 
 
 		bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res);
+		bool OnChooseMenuItem(UINT menuID);
 	};
 }

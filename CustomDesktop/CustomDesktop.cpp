@@ -20,6 +20,9 @@ namespace cd
 {
 	BOOL CCustomDesktopApp::InitInstance()
 	{
+		if (!CWinApp::InitInstance())
+			return FALSE;
+
 		m_oldExceptionHandler = SetUnhandledExceptionFilter(ExceptionHandler);
 #ifdef _DEBUG
 		AllocConsole();
@@ -39,7 +42,7 @@ namespace cd
 #endif
 		SetUnhandledExceptionFilter(m_oldExceptionHandler);
 
-		return 0;
+		return CWinApp::ExitInstance();
 	}
 
 
