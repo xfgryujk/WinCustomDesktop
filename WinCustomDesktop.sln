@@ -32,6 +32,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DesktopBrowser", "Plugin\De
 		{760416AE-79C5-4778-BE97-18472B4E61BB} = {760416AE-79C5-4778-BE97-18472B4E61BB}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CDConfig", "CDConfig\CDConfig.vcxproj", "{1A3ADFC5-9B32-4EBF-9438-8767CE6C35E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -88,6 +90,14 @@ Global
 		{9F98AE7F-06EC-46A9-852B-A1534CFBDDBC}.Release|Win32.Build.0 = Release|Win32
 		{9F98AE7F-06EC-46A9-852B-A1534CFBDDBC}.Release|x64.ActiveCfg = Release|x64
 		{9F98AE7F-06EC-46A9-852B-A1534CFBDDBC}.Release|x64.Build.0 = Release|x64
+		{1A3ADFC5-9B32-4EBF-9438-8767CE6C35E1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1A3ADFC5-9B32-4EBF-9438-8767CE6C35E1}.Debug|Win32.Build.0 = Debug|Win32
+		{1A3ADFC5-9B32-4EBF-9438-8767CE6C35E1}.Debug|x64.ActiveCfg = Debug|x64
+		{1A3ADFC5-9B32-4EBF-9438-8767CE6C35E1}.Debug|x64.Build.0 = Debug|x64
+		{1A3ADFC5-9B32-4EBF-9438-8767CE6C35E1}.Release|Win32.ActiveCfg = Release|Win32
+		{1A3ADFC5-9B32-4EBF-9438-8767CE6C35E1}.Release|Win32.Build.0 = Release|Win32
+		{1A3ADFC5-9B32-4EBF-9438-8767CE6C35E1}.Release|x64.ActiveCfg = Release|x64
+		{1A3ADFC5-9B32-4EBF-9438-8767CE6C35E1}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -5,6 +5,7 @@
 #include <CDAPI.h>
 #include <sstream>
 #include <fstream>
+#include <memory>
 
 
 namespace cd
@@ -12,13 +13,40 @@ namespace cd
 	extern std::vector<EventBase*> g_externalEvents;
 
 
+	void Plugin::Load(const std::wstring& path, const std::wstring& sectionName)
+	{
+		if (sectionName.empty())
+		{
+			m_enable = false;
+			m_path.clear();
+			m_sectionName.clear();
+			m_module = NULL;
+			return;
+		}
+		m_enable = GetPrivateProfileIntW(sectionName.c_str(), L"Enable", 1, path.c_str()) != 0;
+		m_path = GetPluginDir() + sectionName + L".dll";
+		m_sectionName = sectionName;
+		m_module = NULL;
+	}
+
+
 	PluginManager::PluginManager()
+	{
+		Init();
+	}
+
+	PluginManager::~PluginManager()
+	{
+		Uninit();
+	}
+
+	void PluginManager::Init()
 	{
 		//LoadDir(GetPluginDir());
 		LoadPluginList(GetPluginListPath());
 	}
 
-	PluginManager::~PluginManager()
+	void PluginManager::Uninit()
 	{
 		UnloadAll();
 	}
@@ -26,35 +54,25 @@ namespace cd
 
 	std::wstring PluginManager::GetPluginListPath()
 	{
-		return g_global.m_cdDir + L"\\Plugins.txt";
+		return g_global.m_cdDir + L"\\Plugins.ini";
 	}
 
 
-	bool PluginManager::LoadPlugin(const std::wstring& path)
+	bool PluginManager::LoadPlugin(Plugin& plugin)
 	{
-		_RPTFW1(_CRT_WARN, L"加载插件：%s\n", path.c_str());
+		plugin.m_module = NULL;
+		if (!plugin.m_enable)
+			return true;
+		if (plugin.m_path.empty())
+			return false;
+		_RPTFW1(_CRT_WARN, L"加载插件：%s\n", plugin.m_sectionName.c_str());
 
-		Plugin plugin;
-		plugin.m_path = path;
-
-		size_t pos1 = path.rfind(L'\\');
-		if (pos1 == std::wstring::npos)
-			pos1 = path.rfind(L'/');
-		size_t pos2 = path.rfind(L'.');
-		if (pos2 == std::wstring::npos)
-			pos2 = path.size();
-		if (pos1 == std::wstring::npos)
-			plugin.m_pureName = path;
-		else
-			plugin.m_pureName = path.substr(pos1 + 1, pos2 - pos1 - 1);
-
-		plugin.m_module = LoadLibraryW(path.c_str());
-
+		plugin.m_module = LoadLibraryW(plugin.m_path.c_str());
 		if (plugin.m_module == NULL)
 		{
-			_RPTFW1(_CRT_WARN, L"加载插件失败：%s\n", path.c_str());
+			_RPTFW1(_CRT_WARN, L"加载插件失败：%s\n", plugin.m_sectionName.c_str());
 			std::wostringstream oss;
-			oss << L"加载插件失败" << path;
+			oss << L"加载插件失败：" << plugin.m_sectionName;
 			MessageBoxW(g_global.m_topWnd, oss.str().c_str(), L"CustomDesktop", MB_OK);
 			return false;
 		}
@@ -63,7 +81,7 @@ namespace cd
 		return true;
 	}
 
-	void PluginManager::LoadDir(const std::wstring& dir)
+	/*void PluginManager::LoadDir(const std::wstring& dir)
 	{
 		WIN32_FIND_DATAW findFileData;
 		HANDLE find = FindFirstFileW((dir + L"\\*.dll").c_str(), &findFileData);
@@ -74,34 +92,40 @@ namespace cd
 			while (FindNextFileW(find, &findFileData));
 			FindClose(find);
 		}
-	}
+	}*/
 
 	void PluginManager::LoadPluginList(const std::wstring& path)
 	{
-		std::wifstream listStream(path);
-		if (!listStream.is_open())
-			return;
+		auto buffer = std::make_unique<WCHAR[]>(10240);
+		DWORD size = GetPrivateProfileSectionNamesW(buffer.get(), 10240, path.c_str());
+		std::wstring strName;
+		for (LPCWSTR name = buffer.get(); name < buffer.get() + size; name += strName.size() + 1)
+		{
+			strName = name;
 
-		std::wstring pluginDir = GetPluginDir();
-		std::wstring pluginName;
-		while (std::getline(listStream, pluginName))
-			LoadPlugin(pluginDir + pluginName + L".dll");
+			Plugin plugin;
+			plugin.Load(path, strName);
+			LoadPlugin(plugin);
+		}
 	}
 
 	bool PluginManager::UnloadPlugin(int index)
 	{
 		auto& plugin = m_plugins[index];
-		_RPTFW1(_CRT_WARN, L"卸载插件：%s\n", plugin.m_path.c_str());
+		if (plugin.m_module != NULL)
+		{
+			_RPTFW1(_CRT_WARN, L"卸载插件：%s\n", plugin.m_sectionName.c_str());
 
-		for (auto i : g_externalEvents)
-			i->DeleteListenersOfModule(plugin.m_module);
-		if (!FreeLibrary(plugin.m_module))
-			return false;
+			for (auto i : g_externalEvents)
+				i->DeleteListenersOfModule(plugin.m_module);
+			if (!FreeLibrary(plugin.m_module))
+				return false;
+		}
 		m_plugins.erase(m_plugins.begin() + index);
 		return true;
 	}
 
-	bool PluginManager::UnloadPlugin(const std::wstring& pureName)
+	/*bool PluginManager::UnloadPlugin(const std::wstring& pureName)
 	{
 		for (int i = 0; i < (int)m_plugins.size(); ++i)
 		{
@@ -109,11 +133,11 @@ namespace cd
 				return UnloadPlugin(i);
 		}
 		return false;
-	}
+	}*/
 
 	bool PluginManager::UnloadAll()
 	{
-		bool res = true;
+		volatile bool res = true;
 		for (int i = (int)m_plugins.size() - 1; i >= 0; --i)
 			res = res && UnloadPlugin(i);
 		return res;

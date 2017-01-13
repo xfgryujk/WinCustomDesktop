@@ -51,7 +51,7 @@ namespace cd
 					WCHAR windowName[100], className[100];
 					GetWindowTextW(m_coveredByHwnd, windowName, _countof(windowName));
 					GetClassNameW(m_coveredByHwnd, className, _countof(className));
-					_RPTW2(_CRT_WARN, L"桌面被 %s (%s) 遮挡\n", windowName, className);
+					_RPTFW2(_CRT_WARN, L"桌面被 %s (%s) 遮挡\n", windowName, className);
 #endif
 				}
 			}
@@ -62,7 +62,7 @@ namespace cd
 					m_isCovered = false;
 					ExecInMainThread([]{ g_desktopUncoveredEvent(); });
 
-					_RPT0(_CRT_WARN, "桌面从被遮挡恢复\n");
+					_RPTF0(_CRT_WARN, "桌面从被遮挡恢复\n");
 				}
 			}
 

@@ -16,9 +16,6 @@
     <Filter Include="头文件\Helper">
       <UniqueIdentifier>{7a461ee8-4194-4dde-97f0-d58c7220a129}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\Helper">
-      <UniqueIdentifier>{9991c230-ba88-4003-922c-806e928bada8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="头文件\API">
       <UniqueIdentifier>{49f2b649-3004-4865-83c3-fca5b831d607}</UniqueIdentifier>
     </Filter>
@@ -30,15 +27,6 @@
     </Filter>
     <Filter Include="源文件\Module">
       <UniqueIdentifier>{d3fc6086-9e93-447f-af58-2816804e8378}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="头文件\GUI">
-      <UniqueIdentifier>{53b931ae-367b-43eb-b7a4-68830d7c0206}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\GUI">
-      <UniqueIdentifier>{c4185cc6-fff6-4fb1-ab20-6a8947a270ff}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="头文件\Helper\GUI">
-      <UniqueIdentifier>{c657b3be-6b58-4054-9c11-9325c7e0a632}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -90,15 +78,6 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="PluginDlg.h">
-      <Filter>头文件\GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="CustomDesktop.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="ModelessDlg.h">
-      <Filter>头文件\Helper\GUI</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -128,10 +107,7 @@
     <ClCompile Include="TrayMenu.cpp">
       <Filter>源文件\Module</Filter>
     </ClCompile>
-    <ClCompile Include="PluginDlg.cpp">
-      <Filter>源文件\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="CustomDesktop.cpp">
+    <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

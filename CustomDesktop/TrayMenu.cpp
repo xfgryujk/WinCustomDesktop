@@ -5,7 +5,6 @@
 #include "Global.h"
 #include <CDAPI.h>
 #include <CDEvents.h>
-#include "PluginDlg.h"
 
 
 namespace cd
@@ -58,7 +57,8 @@ namespace cd
 
 			HMENU menu = CreatePopupMenu();
 			g_appendTrayMenuEvent(menu);
-			AppendMenu(menu, MF_SEPARATOR, 0, NULL);
+			if (GetMenuItemCount(menu) > 0)
+				AppendMenu(menu, MF_SEPARATOR, 0, NULL);
 			AppendMenu(menu, MF_STRING, m_managePluginMenuID, _T("插件管理"));
 			AppendMenu(menu, MF_STRING, m_exitMenuID, _T("退出"));
 
@@ -83,7 +83,7 @@ namespace cd
 	{
 		if (menuID == m_managePluginMenuID) // 插件管理
 		{
-			CPluginDlg::CreateInstance();
+			ShellExecuteW(NULL, L"open", (g_global.m_cdDir + L"CDConfig.exe").c_str(), NULL, g_global.m_cdDir.c_str(), SW_SHOWNORMAL);
 			return false;
 		}
 		else if (menuID == m_exitMenuID) // 退出
