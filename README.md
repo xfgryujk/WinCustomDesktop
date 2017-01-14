@@ -43,14 +43,11 @@ WIMC = Where the fuck Is My Cursor
 * Windows XP
 
 
-使用方法
+搭建开发环境
 ---------
 
-1. 使用VS2013生成
-2. 把插件放在`CustomDesktop.dll`所在目录下的`Plugin`目录（如x64\Release\Plugin）（其实已经把生成目录设在这里了）
-3. 复制`Data`文件夹到插件所在目录
-4. 运行`Inject.exe`
-5. 如果运行失败，提示“从服务器返回了一个参照”，在**文件属性-兼容性**里选择**以管理员身份运行此程序**
+1. 使用VS2013或以上版本
+2. 运行`SetupEnvironment.bat`
 
 
 插件开发
