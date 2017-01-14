@@ -3,14 +3,15 @@
 
 #include "stdafx.h"
 #include "CDConfigDlg.h"
+#include "ComboDlg.h"
+#include <memory>
 #include <vector>
 
 
 // CCDConfigDlg 对话框
 
-
-CCDConfigDlg::CCDConfigDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CCDConfigDlg::IDD, pParent)
+CCDConfigDlg::CCDConfigDlg(CWnd* pParent /*=NULL*/) : 
+	CDialog(CCDConfigDlg::IDD, pParent)
 {
 }
 
@@ -47,23 +48,46 @@ BOOL CCDConfigDlg::OnInitDialog()
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
-void CCDConfigDlg::ShowPlugins()
-{
-	m_pluginList.DeleteAllItems();
-	/*const auto& plugins = PluginManager::GetInstance().GetPlugins();
-	for (const auto& i : plugins)
-	{
-		int index = m_pluginList.GetItemCount();
-		m_pluginList.InsertItem(index, _T(""));
-		m_pluginList.SetCheck(index, i.m_enable ? TRUE : FALSE);
-		m_pluginList.SetItemText(index, 1, i.m_sectionName.c_str());
-	}*/
-}
-
 // 新建
 void CCDConfigDlg::OnBnClickedButton6()
 {
+	std::vector<CString> list;
+	CFileFind find;
+	BOOL found = find.FindFile(_T("Plugin\\*.dll"));
+	while (found)
+	{
+		found = find.FindNextFile();
+		CString name = find.GetFileTitle();
+		for (int i = 0; i < m_pluginList.GetItemCount(); ++i)
+		{
+			if (m_pluginList.GetItemText(i, 1).CompareNoCase(name) == 0)
+				goto NextFile;
+		}
+		list.push_back(name);
+	NextFile:
+		;
+	}
 
+	if (list.empty())
+	{
+		AfxMessageBox(_T("在Plugin目录下没有找到新插件"), MB_ICONINFORMATION);
+		return;
+	}
+
+	CComboDlg dlg(list, this);
+	if (dlg.DoModal() == IDOK && dlg.m_sel != -1)
+	{
+		int index = m_pluginList.GetSelectionMark();
+		if (index == LB_ERR)
+			index = 0;
+
+		index = m_pluginList.InsertItem(index, _T(""));
+		m_pluginList.SetCheck(index, TRUE);
+		m_pluginList.SetItemText(index, 1, list[dlg.m_sel]);
+
+		m_pluginList.SetSelectionMark(index);
+		m_pluginList.SetItemState(index, LVNI_FOCUSED | LVNI_SELECTED, LVNI_FOCUSED | LVNI_SELECTED);
+	}
 }
 
 // 删除
@@ -128,8 +152,15 @@ void CCDConfigDlg::OnBnClickedButton3()
 void CCDConfigDlg::OnBnClickedButton1()
 {
 	Save();
-	/*ShellExecute(NULL, _T("open"), _T("Inject.exe"), NULL, NULL, SW_SHOWNORMAL);
-	ShellExecute(NULL, _T("open"), _T("Inject.exe"), NULL, NULL, SW_SHOWNORMAL);*/
+
+	SHELLEXECUTEINFO info = {};
+	info.cbSize = sizeof(info);
+	info.fMask = SEE_MASK_NOASYNC;
+	info.lpVerb = _T("open");
+	info.lpFile = _T("Inject.exe");
+	info.nShow = SW_SHOWNORMAL;
+	ShellExecuteEx(&info);
+	ShellExecuteEx(&info);
 }
 
 void CCDConfigDlg::OnOK()
@@ -139,17 +170,42 @@ void CCDConfigDlg::OnOK()
 	CDialog::OnOK();
 }
 
-void CCDConfigDlg::Save()
-{
-	/*std::wstring path = PluginManager::GetPluginListPath();
-	DeleteFileW(path.c_str());
 
-	Plugin plugin;
-	for (int i = 0; i < m_pluginList.GetItemCount(); ++i)
-	{
-		plugin.m_sectionName = m_pluginList.GetItemText(i, 1);
-		plugin.m_enable = m_pluginList.GetCheck(i) != FALSE;
-		plugin.Save(path);
-	}*/
+CString CCDConfigDlg::GetPluginListPath()
+{
+	CString path;
+	GetCurrentDirectory(MAX_PATH, path.GetBuffer(MAX_PATH));
+	path.ReleaseBuffer();
+	return path + _T("\\Plugins.ini");
 }
 
+void CCDConfigDlg::ShowPlugins()
+{
+	m_pluginList.DeleteAllItems();
+
+	// 见CustomDesktop\PluginManager.cpp PluginManager::LoadPluginList
+
+	CString path = GetPluginListPath();
+	auto buffer = std::make_unique<TCHAR[]>(10240);
+	DWORD size = GetPrivateProfileSectionNames(buffer.get(), 10240, path);
+	CString strName;
+	for (LPCTSTR name = buffer.get(); name < buffer.get() + size; name += strName.GetLength() + 1)
+	{
+		strName = name;
+
+		int index = m_pluginList.InsertItem(m_pluginList.GetItemCount(), _T(""));
+		m_pluginList.SetCheck(index, GetPrivateProfileInt(strName, _T("Enable"), 1, path) != 0);
+		m_pluginList.SetItemText(index, 1, strName);
+	}
+}
+
+void CCDConfigDlg::Save()
+{
+	CString path = GetPluginListPath();
+	DeleteFileW(path);
+
+	for (int i = 0; i < m_pluginList.GetItemCount(); ++i)
+	{
+		WritePrivateProfileString(m_pluginList.GetItemText(i, 1), _T("Enable"), m_pluginList.GetCheck(i) ? _T("1") : _T("0"), path);
+	}
+}

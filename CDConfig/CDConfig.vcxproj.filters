@@ -16,11 +16,11 @@
     <Filter Include="头文件\Helper">
       <UniqueIdentifier>{369cf44d-4b84-4c81-841f-644be3fb9c45}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\Helper">
+      <UniqueIdentifier>{cc78d63d-3e96-45eb-9a72-cde2639e7289}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CDConfig.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="CDConfigDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -36,6 +36,12 @@
     <ClInclude Include="ModelessDlg.h">
       <Filter>头文件\Helper</Filter>
     </ClInclude>
+    <ClInclude Include="CDConfig.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ComboDlg.h">
+      <Filter>头文件\Helper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CDConfig.cpp">
@@ -46,6 +52,9 @@
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ComboDlg.cpp">
+      <Filter>源文件\Helper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

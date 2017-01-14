@@ -26,6 +26,7 @@ protected:
 	afx_msg void OnBnClickedButton1();
 	virtual void OnOK();
 
+	CString GetPluginListPath();
 	void ShowPlugins();
 	void Save();
 

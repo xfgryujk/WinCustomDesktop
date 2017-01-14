@@ -187,6 +187,7 @@
   <ItemGroup>
     <ClInclude Include="CDConfig.h" />
     <ClInclude Include="CDConfigDlg.h" />
+    <ClInclude Include="ComboDlg.h" />
     <ClInclude Include="ModelessDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -195,6 +196,7 @@
   <ItemGroup>
     <ClCompile Include="CDConfig.cpp" />
     <ClCompile Include="CDConfigDlg.cpp" />
+    <ClCompile Include="ComboDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -211,4 +213,9 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="CDConfig.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>
