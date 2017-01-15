@@ -1,6 +1,5 @@
 ﻿#include "stdafx.h"
 #include "TrayMenu.h"
-#include <CommCtrl.h>
 #include "resource.h"
 #include "Global.h"
 #include <CDAPI.h>
@@ -19,7 +18,7 @@ namespace cd
 		m_trayData.uID = 100;
 		m_trayData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
 		m_trayData.uCallbackMessage = GetFileListMsgID();
-		LoadIconMetric(g_global.m_cdModule, MAKEINTRESOURCE(IDI_TRAY), LIM_SMALL, &m_trayData.hIcon);
+		m_trayData.hIcon = LoadIcon(g_global.m_cdModule, MAKEINTRESOURCE(IDI_TRAY));
 		_tcscpy_s(m_trayData.szTip, _T("CustomDesktop"));
 
 		Init();
@@ -28,8 +27,6 @@ namespace cd
 	TrayMenu::~TrayMenu()
 	{
 		Uninit();
-
-		DestroyIcon(m_trayData.hIcon);
 	}
 
 	bool TrayMenu::Init()
