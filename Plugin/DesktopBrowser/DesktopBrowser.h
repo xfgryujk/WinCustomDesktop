@@ -18,7 +18,12 @@ private:
 	bool m_runThreadFlag = true;
 	bool m_pauseFlag = false;
 
+	const UINT m_menuID;
+
 
 	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res);
 	bool OnPostDrawBackground(HDC& hdc);
+
+	bool OnAppendTrayMenu(HMENU menu);
+	bool OnChooseMenuItem(UINT menuID);
 };

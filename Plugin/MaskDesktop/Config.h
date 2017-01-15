@@ -4,15 +4,15 @@
 
 static const TCHAR APPNAME[] = _T("MaskDesktop");
 
-class MDConfig final
+class Config final
 {
 public:
 	std::wstring m_imagePath;
 	int m_size = 100;
 
 
-	MDConfig();
+	Config();
 	void LoadConfig(LPCWSTR path);
 };
 
-extern MDConfig g_config;
+extern Config g_config;

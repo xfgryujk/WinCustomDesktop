@@ -1,17 +1,17 @@
 ﻿#include "stdafx.h"
-#include "MDConfig.h"
+#include "Config.h"
 #include <CDAPI.h>
 
 
-MDConfig g_config;
+Config g_config;
 
 
-MDConfig::MDConfig()
+Config::Config()
 {
 	LoadConfig((cd::GetPluginDir() + L"\\Data\\MaskDesktop.ini").c_str());
 }
 
-void MDConfig::LoadConfig(LPCWSTR path)
+void Config::LoadConfig(LPCWSTR path)
 {
 	m_imagePath = cd::GetPluginDir() + L"\\Data\\Mask.png";
 	m_size = GetPrivateProfileIntW(APPNAME, L"Size", m_size, path);

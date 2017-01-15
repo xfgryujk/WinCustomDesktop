@@ -155,12 +155,17 @@ void CCDConfigDlg::OnBnClickedButton1()
 
 	SHELLEXECUTEINFO info = {};
 	info.cbSize = sizeof(info);
-	info.fMask = SEE_MASK_NOASYNC;
+	info.fMask = SEE_MASK_NOCLOSEPROCESS;
 	info.lpVerb = _T("open");
 	info.lpFile = _T("Inject.exe");
 	info.nShow = SW_SHOWNORMAL;
+
 	ShellExecuteEx(&info);
+	WaitForSingleObject(info.hProcess, INFINITE);
+	CloseHandle(info.hProcess);
 	ShellExecuteEx(&info);
+	WaitForSingleObject(info.hProcess, INFINITE);
+	CloseHandle(info.hProcess);
 }
 
 void CCDConfigDlg::OnOK()

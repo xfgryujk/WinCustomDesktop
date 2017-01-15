@@ -3,13 +3,16 @@
 #include <CDEvents.h>
 #include <CDAPI.h>
 #include "Config.h"
+#include <thread>
+#include <shellapi.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <random>
 
 
 WIMC::WIMC(HMODULE hModule) : 
-	m_module(hModule)
+	m_module(hModule),
+	m_menuID(cd::GetMenuID())
 {
 	m_fakeCursors.resize(g_config.m_nCursors);
 
@@ -19,6 +22,8 @@ WIMC::WIMC(HMODULE hModule) :
 			cd::RedrawDesktop();
 		return true;
 	}, m_module);
+	cd::g_appendTrayMenuEvent.AddListener(std::bind(&WIMC::OnAppendTrayMenu, this, std::placeholders::_1), m_module);
+	cd::g_chooseMenuItemEvent.AddListener(std::bind(&WIMC::OnChooseMenuItem, this, std::placeholders::_1), m_module);
 	
 	cd::RedrawDesktop();
 }
@@ -42,6 +47,45 @@ bool WIMC::OnPostDrawIcon(HDC& hdc)
 		i.Draw(hdc, info.hCursor, distance, angle, width, height);
 
 	return true;
+}
+
+
+bool WIMC::OnAppendTrayMenu(HMENU menu)
+{
+	AppendMenu(menu, MF_STRING, m_menuID, APPNAME);
+	return true;
+}
+
+bool WIMC::OnChooseMenuItem(UINT menuID)
+{
+	if (menuID != m_menuID)
+		return true;
+
+	std::thread([this]{
+		SHELLEXECUTEINFOW info = {};
+		info.cbSize = sizeof(info);
+		info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
+		info.lpVerb = L"open";
+		info.lpFile = L"notepad.exe";
+		std::wstring param = cd::GetPluginDir() + L"\\Data\\WIMC.ini";
+		info.lpParameters = param.c_str();
+		info.nShow = SW_SHOWNORMAL;
+		ShellExecuteExW(&info);
+
+		WaitForSingleObject(info.hProcess, INFINITE);
+		CloseHandle(info.hProcess);
+
+		cd::ExecInMainThread([this]{
+			Config newConfig;
+			if (newConfig.m_nCursors != g_config.m_nCursors)
+			{
+				m_fakeCursors.clear();
+				m_fakeCursors.resize(newConfig.m_nCursors);
+			}
+			g_config = newConfig;
+		});
+	}).detach();
+	return false;
 }
 
 

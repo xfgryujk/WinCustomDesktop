@@ -13,6 +13,9 @@ private:
 
 	bool OnPostDrawIcon(HDC& hdc);
 
+	bool OnAppendTrayMenu(HMENU menu);
+	bool OnChooseMenuItem(UINT menuID);
+
 
 	struct FakeCursor
 	{
@@ -27,4 +30,6 @@ private:
 	// 真实鼠标的极坐标原点
 	POINT m_cursorOrigin;
 	std::vector<FakeCursor> m_fakeCursors;
+
+	const UINT m_menuID;
 };

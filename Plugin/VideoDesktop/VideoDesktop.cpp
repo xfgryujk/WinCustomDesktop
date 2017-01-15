@@ -2,12 +2,15 @@
 #include "VideoDesktop.h"
 #include <CDEvents.h>
 #include <CDAPI.h>
-#include "VDConfig.h"
+#include "Config.h"
+#include <thread>
+#include <shellapi.h>
 
 
 VideoDesktop::VideoDesktop(HMODULE hModule) : 
 	m_module(hModule), 
-	WM_GRAPHNOTIFY(cd::GetFileListMsgID())
+	WM_GRAPHNOTIFY(cd::GetFileListMsgID()),
+	m_menuID(cd::GetMenuID())
 {
 	// 监听事件
 	cd::g_desktopCoveredEvent.AddListener([this]{ if (m_curPlayer != NULL) m_curPlayer->PauseVideo(); return true; }, m_module);
@@ -16,22 +19,11 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 	cd::g_postDrawBackgroundEvent.AddListener(std::bind(&VideoDesktop::OnPostDrawBackground, this, std::placeholders::_1), m_module);
 	cd::g_fileListWndProcEvent.AddListener(std::bind(&VideoDesktop::OnFileListWndProc, this, std::placeholders::_1,
 		std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), m_module);
+	cd::g_appendTrayMenuEvent.AddListener(std::bind(&VideoDesktop::OnAppendTrayMenu, this, std::placeholders::_1), m_module);
+	cd::g_chooseMenuItemEvent.AddListener(std::bind(&VideoDesktop::OnChooseMenuItem, this, std::placeholders::_1), m_module);
 
 	cd::ExecInMainThread([this]{
-		// 初始化播放器
-		for (auto& player : m_players)
-		{
-			if (!InitPlayer(player))
-				return;
-		}
-		m_curPlayer = m_players[m_curPlayerIndex].get();
-
-		m_curPlayer->GetVideoSize(m_videoSize);
-		m_img.Create(m_videoSize.cx, m_videoSize.cy, 32/*, CImage::createAlphaChannel*/);
-		// CImage偷偷改了BOTTOMUP位图的m_pBits...
-		m_imgData = m_img.GetPixelAddress(0, m_videoSize.cy - 1);
-
-		m_curPlayer->RunVideo();
+		InitPlayers();
 	});
 }
 
@@ -40,6 +32,26 @@ VideoDesktop::~VideoDesktop()
 	// 优先释放players！否则可能在析构时触发事件
 	for (auto& i : m_players)
 		i = nullptr;
+}
+
+void VideoDesktop::InitPlayers()
+{
+	// 初始化播放器
+	for (auto& player : m_players)
+	{
+		if (!InitPlayer(player))
+			return;
+	}
+	m_curPlayer = m_players[m_curPlayerIndex = 0].get();
+
+	m_curPlayer->GetVideoSize(m_videoSize);
+	if (!m_img.IsNull())
+		m_img.Destroy();
+	m_img.Create(m_videoSize.cx, m_videoSize.cy, 32/*, CImage::createAlphaChannel*/);
+	// CImage偷偷改了BOTTOMUP位图的m_pBits...
+	m_imgData = m_img.GetPixelAddress(0, m_videoSize.cy - 1);
+
+	m_curPlayer->RunVideo();
 }
 
 bool VideoDesktop::InitPlayer(std::unique_ptr<VideoPlayer>& player)
@@ -124,4 +136,49 @@ bool VideoDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam,
 		return false;
 	}
 	return true;
+}
+
+
+bool VideoDesktop::OnAppendTrayMenu(HMENU menu)
+{
+	AppendMenu(menu, MF_STRING, m_menuID, APPNAME);
+	return true;
+}
+
+bool VideoDesktop::OnChooseMenuItem(UINT menuID)
+{
+	if (menuID != m_menuID)
+		return true;
+
+	std::thread([this]{
+		SHELLEXECUTEINFOW info = {};
+		info.cbSize = sizeof(info);
+		info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
+		info.lpVerb = L"open";
+		info.lpFile = L"notepad.exe";
+		std::wstring param = cd::GetPluginDir() + L"\\Data\\VideoDesktop.ini";
+		info.lpParameters = param.c_str();
+		info.nShow = SW_SHOWNORMAL;
+		ShellExecuteExW(&info);
+
+		WaitForSingleObject(info.hProcess, INFINITE);
+		CloseHandle(info.hProcess);
+
+		cd::ExecInMainThread([this]{
+			Config newConfig;
+			if (newConfig.m_volume != g_config.m_volume)
+			{
+				for (auto& i : m_players)
+				{
+					if (i != nullptr)
+						i->SetVolume(newConfig.m_volume - 100);
+				}
+			}
+			auto oldVideoPath = g_config.m_videoPath;
+			g_config = newConfig;
+			if (newConfig.m_videoPath != oldVideoPath)
+				InitPlayers();
+		});
+	}).detach();
+	return false;
 }

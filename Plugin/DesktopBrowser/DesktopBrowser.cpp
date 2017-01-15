@@ -4,10 +4,13 @@
 #include <CDAPI.h>
 #include "Config.h"
 #include <CommCtrl.h>
+#include <thread>
+#include <shellapi.h>
 
 
 DesktopBrowser::DesktopBrowser(HMODULE hModule) : 
-	m_module(hModule)
+	m_module(hModule),
+	m_menuID(cd::GetMenuID())
 {
 	cd::g_fileListWndProcEvent.AddListener(std::bind(&DesktopBrowser::OnFileListWndProc, this, std::placeholders::_1,
 		std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), m_module);
@@ -22,6 +25,8 @@ DesktopBrowser::DesktopBrowser(HMODULE hModule) :
 	cd::g_preDrawBackgroundEvent.AddListener([](HDC&){ return false; }, m_module);
 	cd::g_desktopCoveredEvent.AddListener([this]{ m_pauseFlag = true; return true; }, m_module);
 	cd::g_desktopUncoveredEvent.AddListener([this]{ m_pauseFlag = false; return true; }, m_module);
+	cd::g_appendTrayMenuEvent.AddListener(std::bind(&DesktopBrowser::OnAppendTrayMenu, this, std::placeholders::_1), m_module);
+	cd::g_chooseMenuItemEvent.AddListener(std::bind(&DesktopBrowser::OnChooseMenuItem, this, std::placeholders::_1), m_module);
 
 	cd::ExecInMainThread([this]{
 		SIZE size;
@@ -87,4 +92,40 @@ bool DesktopBrowser::OnPostDrawBackground(HDC& hdc)
 	RECT rect = { 0, 0, size.cx, size.cy };
 	m_browser->Draw(hdc, rect);
 	return true;
+}
+
+
+bool DesktopBrowser::OnAppendTrayMenu(HMENU menu)
+{
+	AppendMenu(menu, MF_STRING, m_menuID, APPNAME);
+	return true;
+}
+
+bool DesktopBrowser::OnChooseMenuItem(UINT menuID)
+{
+	if (menuID != m_menuID)
+		return true;
+
+	std::thread([this]{
+		SHELLEXECUTEINFOW info = {};
+		info.cbSize = sizeof(info);
+		info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
+		info.lpVerb = L"open";
+		info.lpFile = L"notepad.exe";
+		std::wstring param = cd::GetPluginDir() + L"\\Data\\DesktopBrowser.ini";
+		info.lpParameters = param.c_str();
+		info.nShow = SW_SHOWNORMAL;
+		ShellExecuteExW(&info);
+
+		WaitForSingleObject(info.hProcess, INFINITE);
+		CloseHandle(info.hProcess);
+
+		cd::ExecInMainThread([this]{
+			Config newConfig;
+			if (newConfig.m_homePage != g_config.m_homePage && m_browser != nullptr)
+				m_browser->Navigate(newConfig.m_homePage.c_str());
+			g_config = newConfig;
+		});
+	}).detach();
+	return false;
 }

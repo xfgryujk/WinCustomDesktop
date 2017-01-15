@@ -24,10 +24,10 @@
     <ClInclude Include="VideoDesktop.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="VDConfig.h">
+    <ClInclude Include="VideoPlayer.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="VideoPlayer.h">
+    <ClInclude Include="Config.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -41,10 +41,10 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="VDConfig.cpp">
+    <ClCompile Include="VideoPlayer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="VideoPlayer.cpp">
+    <ClCompile Include="Config.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
