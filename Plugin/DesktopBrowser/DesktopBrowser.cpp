@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "DesktopBrowser.h"
 #include <CDEvents.h>
+using namespace std::placeholders;
 #include <CDAPI.h>
 #include "Config.h"
 #include <CommCtrl.h>
@@ -12,9 +13,8 @@ DesktopBrowser::DesktopBrowser(HMODULE hModule) :
 	m_module(hModule),
 	m_menuID(cd::GetMenuID())
 {
-	cd::g_fileListWndProcEvent.AddListener(std::bind(&DesktopBrowser::OnFileListWndProc, this, std::placeholders::_1,
-		std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), m_module);
-	cd::g_postDrawBackgroundEvent.AddListener(std::bind(&DesktopBrowser::OnPostDrawBackground, this, std::placeholders::_1), m_module);
+	cd::g_fileListWndProcEvent.AddListener(std::bind(&DesktopBrowser::OnFileListWndProc, this, _1, _2, _3, _4), m_module);
+	cd::g_postDrawBackgroundEvent.AddListener(std::bind(&DesktopBrowser::OnPostDrawBackground, this, _1), m_module);
 	cd::g_fileListWndSizeEvent.AddListener([this](int width, int height){
 		if (m_browser == nullptr)
 			return true;
@@ -25,8 +25,8 @@ DesktopBrowser::DesktopBrowser(HMODULE hModule) :
 	cd::g_preDrawBackgroundEvent.AddListener([](HDC&){ return false; }, m_module);
 	cd::g_desktopCoveredEvent.AddListener([this]{ m_pauseFlag = true; return true; }, m_module);
 	cd::g_desktopUncoveredEvent.AddListener([this]{ m_pauseFlag = false; return true; }, m_module);
-	cd::g_appendTrayMenuEvent.AddListener(std::bind(&DesktopBrowser::OnAppendTrayMenu, this, std::placeholders::_1), m_module);
-	cd::g_chooseMenuItemEvent.AddListener(std::bind(&DesktopBrowser::OnChooseMenuItem, this, std::placeholders::_1), m_module);
+	cd::g_appendTrayMenuEvent.AddListener(std::bind(&DesktopBrowser::OnAppendTrayMenu, this, _1), m_module);
+	cd::g_chooseMenuItemEvent.AddListener(std::bind(&DesktopBrowser::OnChooseMenuItem, this, _1), m_module);
 
 	cd::ExecInMainThread([this]{
 		SIZE size;

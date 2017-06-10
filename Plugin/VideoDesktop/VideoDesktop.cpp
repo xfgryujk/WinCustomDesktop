@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "VideoDesktop.h"
 #include <CDEvents.h>
+using namespace std::placeholders;
 #include <CDAPI.h>
 #include "Config.h"
 #include <thread>
@@ -16,11 +17,10 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 	cd::g_desktopCoveredEvent.AddListener([this]{ if (m_curPlayer != NULL) m_curPlayer->PauseVideo(); return true; }, m_module);
 	cd::g_desktopUncoveredEvent.AddListener([this]{ if (m_curPlayer != NULL) m_curPlayer->RunVideo(); return true; }, m_module);
 	cd::g_preDrawBackgroundEvent.AddListener([this](HDC&){ return m_curPlayer == NULL || m_img.IsNull(); }, m_module);
-	cd::g_postDrawBackgroundEvent.AddListener(std::bind(&VideoDesktop::OnPostDrawBackground, this, std::placeholders::_1), m_module);
-	cd::g_fileListWndProcEvent.AddListener(std::bind(&VideoDesktop::OnFileListWndProc, this, std::placeholders::_1,
-		std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), m_module);
-	cd::g_appendTrayMenuEvent.AddListener(std::bind(&VideoDesktop::OnAppendTrayMenu, this, std::placeholders::_1), m_module);
-	cd::g_chooseMenuItemEvent.AddListener(std::bind(&VideoDesktop::OnChooseMenuItem, this, std::placeholders::_1), m_module);
+	cd::g_postDrawBackgroundEvent.AddListener(std::bind(&VideoDesktop::OnPostDrawBackground, this, _1), m_module);
+	cd::g_fileListWndProcEvent.AddListener(std::bind(&VideoDesktop::OnFileListWndProc, this, _1, _2, _3, _4), m_module);
+	cd::g_appendTrayMenuEvent.AddListener(std::bind(&VideoDesktop::OnAppendTrayMenu, this, _1), m_module);
+	cd::g_chooseMenuItemEvent.AddListener(std::bind(&VideoDesktop::OnChooseMenuItem, this, _1), m_module);
 
 	cd::ExecInMainThread([this]{
 		InitPlayers();
@@ -66,7 +66,7 @@ bool VideoDesktop::InitPlayer(std::unique_ptr<VideoPlayer>& player)
 	}
 
 	player->SetVolume(g_config.m_volume - 100);
-	player->SetOnPresent(std::bind(&VideoDesktop::OnPresent, this, std::placeholders::_1));
+	player->SetOnPresent(std::bind(&VideoDesktop::OnPresent, this, _1));
 	player->SetNotifyWindow(cd::GetFileListHwnd(), WM_GRAPHNOTIFY);
 	return true;
 }

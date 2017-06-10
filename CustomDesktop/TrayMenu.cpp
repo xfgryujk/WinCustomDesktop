@@ -4,6 +4,7 @@
 #include "Global.h"
 #include <CDAPI.h>
 #include <CDEvents.h>
+using namespace std::placeholders;
 
 
 namespace cd
@@ -32,9 +33,8 @@ namespace cd
 	bool TrayMenu::Init()
 	{
 		Shell_NotifyIcon(NIM_ADD, &m_trayData);
-		g_fileListWndProcEvent.AddListener(std::bind(&TrayMenu::OnFileListWndProc, this, std::placeholders::_1, std::placeholders::_2,
-			std::placeholders::_3, std::placeholders::_4));
-		g_chooseMenuItemEvent.AddListener(std::bind(&TrayMenu::OnChooseMenuItem, this, std::placeholders::_1));
+		g_fileListWndProcEvent.AddListener(std::bind(&TrayMenu::OnFileListWndProc, this, _1, _2, _3, _4));
+		g_chooseMenuItemEvent.AddListener(std::bind(&TrayMenu::OnChooseMenuItem, this, _1));
 		return true;
 	}
 

@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "MaskDesktop.h"
 #include <CDEvents.h>
+using namespace std::placeholders;
 #include <CDAPI.h>
 #include "Config.h"
 #include <thread>
@@ -15,11 +16,10 @@ MaskDesktop::MaskDesktop(HMODULE hModule) :
 	InitImg();
 
 	// 监听事件
-	cd::g_fileListWndProcEvent.AddListener(std::bind(&MaskDesktop::OnFileListWndProc, this, std::placeholders::_1, 
-		std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), m_module);
-	cd::g_postDrawIconEvent.AddListener(std::bind(&MaskDesktop::OnPostDrawIcon, this, std::placeholders::_1), m_module);
-	cd::g_appendTrayMenuEvent.AddListener(std::bind(&MaskDesktop::OnAppendTrayMenu, this, std::placeholders::_1), m_module);
-	cd::g_chooseMenuItemEvent.AddListener(std::bind(&MaskDesktop::OnChooseMenuItem, this, std::placeholders::_1), m_module);
+	cd::g_fileListWndProcEvent.AddListener(std::bind(&MaskDesktop::OnFileListWndProc, this, _1, _2, _3, _4), m_module);
+	cd::g_postDrawIconEvent.AddListener(std::bind(&MaskDesktop::OnPostDrawIcon, this, _1), m_module);
+	cd::g_appendTrayMenuEvent.AddListener(std::bind(&MaskDesktop::OnAppendTrayMenu, this, _1), m_module);
+	cd::g_chooseMenuItemEvent.AddListener(std::bind(&MaskDesktop::OnChooseMenuItem, this, _1), m_module);
 
 	cd::RedrawDesktop();
 }

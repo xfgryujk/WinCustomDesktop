@@ -2,6 +2,7 @@
 #include "BufferedRendering.h"
 #include "Global.h"
 #include <CDEvents.h>
+using namespace std::placeholders;
 #include <CDAPI.h>
 #ifdef _WIN64
 #include <VersionHelpers.h>
@@ -40,16 +41,14 @@ namespace cd
 			return false;
 
 		// 监听事件
-		g_fileListWndProcEvent.AddListener(std::bind(&BufferedRendering::OnFileListWndProc, this, std::placeholders::_1, std::placeholders::_2, 
-			std::placeholders::_3, std::placeholders::_4));
-		g_parentWndProcEvent.AddListener(std::bind(&BufferedRendering::OnParentWndProc, this, std::placeholders::_1, std::placeholders::_2,
-			std::placeholders::_3, std::placeholders::_4));
+		g_fileListWndProcEvent.AddListener(std::bind(&BufferedRendering::OnFileListWndProc, this, _1, _2, _3, _4));
+		g_parentWndProcEvent.AddListener(std::bind(&BufferedRendering::OnParentWndProc, this, _1, _2, _3, _4));
 
-		g_postDrawIconEvent.AddListener(std::bind(&BufferedRendering::PostDrawIcon, this, std::placeholders::_1));
+		g_postDrawIconEvent.AddListener(std::bind(&BufferedRendering::PostDrawIcon, this, _1));
 
 		g_fileListRedrawWindowEvent.AddListener([](CONST RECT*, HRGN, UINT){ g_global.m_needUpdateIcon = true; return true; });
-		g_fileListBeginPaintEvent.AddListener(std::bind(&BufferedRendering::OnFileListBeginPaint, this, std::placeholders::_1, std::placeholders::_2));
-		g_fileListEndPaintEvent.AddListener(std::bind(&BufferedRendering::OnFileListEndPaint, this, std::placeholders::_1));
+		g_fileListBeginPaintEvent.AddListener(std::bind(&BufferedRendering::OnFileListBeginPaint, this, _1, _2));
+		g_fileListEndPaintEvent.AddListener(std::bind(&BufferedRendering::OnFileListEndPaint, this, _1));
 
 		// 获取图标层
 		ExecInMainThread([]{ g_global.m_needUpdateIcon = true; RedrawDesktop(); });
@@ -150,6 +149,29 @@ namespace cd
 	}
 
 
+	/*
+	使用了双缓冲和保存图标层结果来优化
+
+	渲染路线：
+
+	1. 不需要更新图标层时（使用已保存的图标层m_iconBufferImg）：
+	    文件列表WM_PAINT -> BeginPaint -> g_fileListBeginPaintEvent（把窗口DC替换成缓冲DC）
+	    -> 父窗口WM_ERASEBKGND -> g_preDrawBackgroundEvent -> 画背景 -> g_postDrawBackgroundEvent -> 画图标
+	    -> g_postDrawIconEvent -> g_fileListEndPaintEvent（把缓冲DC复制回窗口DC） -> EndPaint
+	
+	2. 需要更新图标层时（由原窗口过程渲染图标）：
+	    （原窗口过程）文件列表WM_PAINT -> BeginPaint -> g_fileListBeginPaintEvent（把窗口DC替换成缓冲DC）
+	    -> 父窗口WM_ERASEBKGND -> g_preDrawBackgroundEvent -> 画背景 -> g_postDrawBackgroundEvent
+		-> 此时缓冲DC是背景，把缓冲图像复制到m_bufferImgBackup，再把缓冲图像的alpha清0准备画图标 -> 画图标
+		-> g_postDrawIconEvent（此时缓冲DC是图标，把缓冲图像复制到m_iconBufferImg，然后把背景和图标画回缓冲DC）
+		-> g_fileListEndPaintEvent（把缓冲DC复制回窗口DC） -> EndPaint
+	
+	3. 不接管渲染时（XP下，由原窗口过程渲染图标）：
+		（原窗口过程）文件列表WM_PAINT -> BeginPaint -> 父窗口WM_ERASEBKGND -> g_preDrawBackgroundEvent
+	    -> 画背景（用m_wallpaperImg）-> g_postDrawBackgroundEvent -> g_fileListBeginPaintEvent（把窗口DC替换成缓冲DC）
+		-> 画图标 -> g_postDrawIconEvent -> g_fileListEndPaintEvent（把缓冲DC复制回窗口DC） -> EndPaint
+	*/
+
 	// 处理size、接管paint
 	bool BufferedRendering::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
 	{
@@ -202,6 +224,7 @@ namespace cd
 		{
 		case WM_ERASEBKGND: // 当顶级窗口是WorkerW时收不到这个消息？
 			// wParam不一定是m_bufferDC，comctl内部也用了双缓冲
+			// 使用hdc作为副本防止m_bufferDC被事件改变
 			HDC hdc = m_bufferDC;
 
 			// 画背景
