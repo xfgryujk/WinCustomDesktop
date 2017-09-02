@@ -33,8 +33,8 @@ namespace cd
 	bool TrayMenu::Init()
 	{
 		Shell_NotifyIcon(NIM_ADD, &m_trayData);
-		g_fileListWndProcEvent.AddListener(std::bind(&TrayMenu::OnFileListWndProc, this, _1, _2, _3, _4));
-		g_chooseMenuItemEvent.AddListener(std::bind(&TrayMenu::OnChooseMenuItem, this, _1));
+		g_fileListWndProcEvent.AddListener(std::bind(&TrayMenu::OnFileListWndProc, this, _1, _2, _3, _4, _5));
+		g_chooseMenuItemEvent.AddListener(std::bind(&TrayMenu::OnChooseMenuItem, this, _1, _2));
 		return true;
 	}
 
@@ -45,12 +45,13 @@ namespace cd
 	}
 
 
-	bool TrayMenu::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
+	void TrayMenu::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res, bool& pass)
 	{
 		if (message == m_trayData.uCallbackMessage) // 托盘右键
 		{
+			pass = false;
 			if (lParam != WM_RBUTTONUP)
-				return false;
+				return;
 
 			HMENU menu = CreatePopupMenu();
 			g_appendTrayMenuEvent(menu);
@@ -67,28 +68,25 @@ namespace cd
 			PostMessage(g_global.m_topWnd, WM_NULL, 0, 0);
 
 			DestroyMenu(menu);
-			return false;
 		}
 		else if (message == WM_COMMAND && HIWORD(wParam) == 0) // 选择菜单项
 		{
-			return g_chooseMenuItemEvent(LOWORD(wParam));
+			g_chooseMenuItemEvent(LOWORD(wParam), pass);
 		}
-		return true;
 	}
 
-	bool TrayMenu::OnChooseMenuItem(UINT menuID)
+	void TrayMenu::OnChooseMenuItem(UINT menuID, bool& pass)
 	{
 		if (menuID == m_managePluginMenuID) // 插件管理
 		{
 			ShellExecuteW(NULL, L"open", (g_global.m_cdDir + L"CDConfig.exe").c_str(), NULL, g_global.m_cdDir.c_str(), SW_SHOWNORMAL);
-			return false;
+			pass = false;
 		}
 		else if (menuID == m_exitMenuID) // 退出
 		{
 			SendMessage(g_global.m_fileListWnd, WM_PREUNLOAD, NULL, NULL);
 			CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)FreeLibrary, g_global.m_cdModule, 0, NULL);
-			return false;
+			pass = false;
 		}
-		return true;
 	}
 }

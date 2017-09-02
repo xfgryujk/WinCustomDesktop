@@ -31,11 +31,11 @@ private:
 	void InitPlayers();
 	bool InitPlayer(std::unique_ptr<VideoPlayer>& player);
 
-	bool OnPostDrawBackground(HDC& hdc);
+	void OnPostDrawBackground(HDC& hdc);
 	void OnPresent(IMediaSample* mediaSample);
 
-	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res);
+	void OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res, bool& pass);
 
-	bool OnAppendTrayMenu(HMENU menu);
-	bool OnChooseMenuItem(UINT menuID);
+	void OnAppendTrayMenu(HMENU menu);
+	void OnChooseMenuItem(UINT menuID, bool& pass);
 };

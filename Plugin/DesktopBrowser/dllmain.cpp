@@ -17,7 +17,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	{
 	case DLL_PROCESS_ATTACH:
 		g_desktopBrowser = std::make_unique<DesktopBrowser>(hModule);
-		cd::g_preUnloadEvent.AddListener([]{ g_desktopBrowser = nullptr; return true; }, hModule);
+		cd::g_preUnloadEvent.AddListener([]{ g_desktopBrowser = nullptr; }, hModule);
 		break;
 
 	case DLL_PROCESS_DETACH:

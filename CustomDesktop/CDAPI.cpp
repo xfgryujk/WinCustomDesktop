@@ -78,19 +78,19 @@ namespace cd
 
 
 	// 实现ExecInMainThread
-	static bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
+	static void OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res, bool& pass)
 	{
 		if (message != WM_EXEC_FUNCTION)
-			return true;
+			return;
 
 		const auto function = reinterpret_cast<std::function<void()>*>(wParam);
-		if (function != nullptr && !function->_Empty())
+		if (function != nullptr && *function)
 		{
 			(*function)();
 			delete function;
 			res = 1;
 		}
-		return false;
+		pass = false;
 	}
 
 	CDAPIModule::CDAPIModule()

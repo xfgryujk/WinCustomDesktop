@@ -17,7 +17,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	{
 	case DLL_PROCESS_ATTACH:
 		g_maskDesktop = std::make_unique<MaskDesktop>(hModule);
-		cd::g_preUnloadEvent.AddListener([]{ g_maskDesktop = nullptr; return true; }, hModule);
+		cd::g_preUnloadEvent.AddListener([]{ g_maskDesktop = nullptr; }, hModule);
 		break;
 
 	case DLL_PROCESS_DETACH:

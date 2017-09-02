@@ -95,7 +95,9 @@ namespace cd
 	LRESULT CALLBACK HookDesktop::FileListWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		LRESULT res = 0;
-		if (!g_fileListWndProcEvent(message, wParam, lParam, res))
+		bool pass = true;
+		g_fileListWndProcEvent(message, wParam, lParam, res, pass);
+		if (!pass)
 			return res;
 		return CallWindowProc(g_global.m_oldFileListWndProc, hwnd, message, wParam, lParam);
 	}
@@ -104,7 +106,9 @@ namespace cd
 	LRESULT CALLBACK HookDesktop::ParentWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		LRESULT res = 0;
-		if (!g_parentWndProcEvent(message, wParam, lParam, res))
+		bool pass = true;
+		g_parentWndProcEvent(message, wParam, lParam, res, pass);
+		if (!pass)
 			return res;
 		return CallWindowProc(g_global.m_oldParentWndProc, hwnd, message, wParam, lParam);
 	}
@@ -113,7 +117,9 @@ namespace cd
 	LRESULT CALLBACK HookDesktop::TopWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		LRESULT res = 0;
-		if (!g_topWndProcEvent(message, wParam, lParam, res))
+		bool pass = true;
+		g_topWndProcEvent(message, wParam, lParam, res, pass);
+		if (!pass)
 			return res;
 		return CallWindowProc(g_global.m_oldTopWndProc, hwnd, message, wParam, lParam);
 	}

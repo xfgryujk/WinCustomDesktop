@@ -19,7 +19,7 @@ namespace cd
 	class Event final : public EventBase
 	{
 	public:
-		typedef std::function<bool(ArgTypes...)> FunctionType;
+		typedef std::function<void(ArgTypes...)> FunctionType;
 
 	private:
 		struct Listener
@@ -59,16 +59,13 @@ namespace cd
 			}
 		}
 
-		// 如果事件被取消返回false
-		bool operator () (ArgTypes... args)
+		void operator () (ArgTypes... args)
 		{
-			// 按原来的写法32位版会被迷之优化掉，返回false后面的函数不会被调用...
-			volatile bool res = true;
 			for (auto it = m_listeners.cbegin(); it != m_listeners.cend(); ++it)
 			{
 				try
 				{
-					res = res && it->second.m_function(std::forward<ArgTypes>(args)...);
+					it->second.m_function(std::forward<ArgTypes>(args)...);
 				}
 				catch (std::bad_function_call&)
 				{
@@ -81,7 +78,6 @@ namespace cd
 					break;
 				}
 			}
-			return res;
 		}
 	};
 

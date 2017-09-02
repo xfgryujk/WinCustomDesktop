@@ -24,7 +24,7 @@ namespace cd
 		UINT m_exitMenuID;
 
 
-		bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res);
-		bool OnChooseMenuItem(UINT menuID);
+		void OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res, bool& pass);
+		void OnChooseMenuItem(UINT menuID, bool& pass);
 	};
 }

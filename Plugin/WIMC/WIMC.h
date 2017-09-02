@@ -11,10 +11,10 @@ private:
 	HMODULE m_module;
 
 
-	bool OnPostDrawIcon(HDC& hdc);
+	void OnPostDrawIcon(HDC& hdc);
 
-	bool OnAppendTrayMenu(HMENU menu);
-	bool OnChooseMenuItem(UINT menuID);
+	void OnAppendTrayMenu(HMENU menu);
+	void OnChooseMenuItem(UINT menuID, bool& pass);
 
 
 	struct FakeCursor

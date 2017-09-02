@@ -17,7 +17,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	{
 	case DLL_PROCESS_ATTACH:
 		g_wimc = std::make_unique<WIMC>(hModule);
-		cd::g_preUnloadEvent.AddListener([]{ g_wimc = nullptr; return true; }, hModule);
+		cd::g_preUnloadEvent.AddListener([]{ g_wimc = nullptr; }, hModule);
 		break;
 
 	case DLL_PROCESS_DETACH:

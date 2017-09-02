@@ -36,10 +36,10 @@ namespace cd
 
 
 	// 处理准备卸载的消息
-	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
+	void OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res, bool& pass)
 	{
 		if (message != WM_PREUNLOAD)
-			return true;
+			return;
 
 		// 卸载hook防止崩溃
 		_RPTF0(_CRT_WARN, "HookDesktop::GetInstance().Uninit();\n");
@@ -58,7 +58,7 @@ namespace cd
 		BufferedRendering::GetInstance().Uninit();
 
 		res = 1;
-		return false;
+		pass = false;
 	}
 
 #define InitModule(module) \

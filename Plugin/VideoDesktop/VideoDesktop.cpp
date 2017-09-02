@@ -14,13 +14,13 @@ VideoDesktop::VideoDesktop(HMODULE hModule) :
 	m_menuID(cd::GetMenuID())
 {
 	// 监听事件
-	cd::g_desktopCoveredEvent.AddListener([this]{ if (m_curPlayer != NULL) m_curPlayer->PauseVideo(); return true; }, m_module);
-	cd::g_desktopUncoveredEvent.AddListener([this]{ if (m_curPlayer != NULL) m_curPlayer->RunVideo(); return true; }, m_module);
-	cd::g_preDrawBackgroundEvent.AddListener([this](HDC&){ return m_curPlayer == NULL || m_img.IsNull(); }, m_module);
+	cd::g_desktopCoveredEvent.AddListener([this]{ if (m_curPlayer != NULL) m_curPlayer->PauseVideo(); }, m_module);
+	cd::g_desktopUncoveredEvent.AddListener([this]{ if (m_curPlayer != NULL) m_curPlayer->RunVideo(); }, m_module);
+	cd::g_preDrawBackgroundEvent.AddListener([this](HDC&, bool& pass){ pass = m_curPlayer == NULL || m_img.IsNull(); }, m_module);
 	cd::g_postDrawBackgroundEvent.AddListener(std::bind(&VideoDesktop::OnPostDrawBackground, this, _1), m_module);
-	cd::g_fileListWndProcEvent.AddListener(std::bind(&VideoDesktop::OnFileListWndProc, this, _1, _2, _3, _4), m_module);
+	cd::g_fileListWndProcEvent.AddListener(std::bind(&VideoDesktop::OnFileListWndProc, this, _1, _2, _3, _4, _5), m_module);
 	cd::g_appendTrayMenuEvent.AddListener(std::bind(&VideoDesktop::OnAppendTrayMenu, this, _1), m_module);
-	cd::g_chooseMenuItemEvent.AddListener(std::bind(&VideoDesktop::OnChooseMenuItem, this, _1), m_module);
+	cd::g_chooseMenuItemEvent.AddListener(std::bind(&VideoDesktop::OnChooseMenuItem, this, _1, _2), m_module);
 
 	cd::ExecInMainThread([this]{
 		InitPlayers();
@@ -72,18 +72,16 @@ bool VideoDesktop::InitPlayer(std::unique_ptr<VideoPlayer>& player)
 }
 
 
-bool VideoDesktop::OnPostDrawBackground(HDC& hdc)
+void VideoDesktop::OnPostDrawBackground(HDC& hdc)
 {
 	if (m_img.IsNull())
-		return true;
+		return;
 
 	SIZE size;
 	cd::GetDesktopSize(size);
 	m_imgDataLock.lock();
 	m_img.AlphaBlend(hdc, 0, 0, size.cx, size.cy, 0, 0, m_videoSize.cx, m_videoSize.cy);
 	m_imgDataLock.unlock();
-
-	return false;
 }
 
 void VideoDesktop::OnPresent(IMediaSample* mediaSample)
@@ -108,7 +106,7 @@ void VideoDesktop::OnPresent(IMediaSample* mediaSample)
 }
 
 
-bool VideoDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
+void VideoDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res, bool& pass)
 {
 	if (message == WM_GRAPHNOTIFY)
 	{
@@ -133,22 +131,20 @@ bool VideoDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam,
 			}
 		}
 		res = 1;
-		return false;
+		pass = false;
 	}
-	return true;
 }
 
 
-bool VideoDesktop::OnAppendTrayMenu(HMENU menu)
+void VideoDesktop::OnAppendTrayMenu(HMENU menu)
 {
 	AppendMenu(menu, MF_STRING, m_menuID, APPNAME);
-	return true;
 }
 
-bool VideoDesktop::OnChooseMenuItem(UINT menuID)
+void VideoDesktop::OnChooseMenuItem(UINT menuID, bool& pass)
 {
 	if (menuID != m_menuID)
-		return true;
+		return;
 
 	std::thread([this]{
 		SHELLEXECUTEINFOW info = {};
@@ -180,5 +176,5 @@ bool VideoDesktop::OnChooseMenuItem(UINT menuID)
 				InitPlayers();
 		});
 	}).detach();
-	return false;
+	pass = false;
 }

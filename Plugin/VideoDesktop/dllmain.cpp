@@ -17,7 +17,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	{
 	case DLL_PROCESS_ATTACH:
 		g_videoDesktop = std::make_unique<VideoDesktop>(hModule);
-		cd::g_preUnloadEvent.AddListener([]{ g_videoDesktop = nullptr; return true; }, hModule);
+		cd::g_preUnloadEvent.AddListener([]{ g_videoDesktop = nullptr; }, hModule);
 		break;
 
 	case DLL_PROCESS_DETACH:

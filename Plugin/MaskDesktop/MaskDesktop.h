@@ -18,9 +18,9 @@ private:
 
 	void InitImg();
 
-	bool OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res);
-	bool OnPostDrawIcon(HDC& hdc);
+	void OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res, bool& pass);
+	void OnPostDrawIcon(HDC& hdc);
 
-	bool OnAppendTrayMenu(HMENU menu);
-	bool OnChooseMenuItem(UINT menuID);
+	void OnAppendTrayMenu(HMENU menu);
+	void OnChooseMenuItem(UINT menuID, bool& pass);
 };

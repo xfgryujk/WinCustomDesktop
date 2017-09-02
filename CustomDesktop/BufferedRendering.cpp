@@ -41,12 +41,12 @@ namespace cd
 			return false;
 
 		// 监听事件
-		g_fileListWndProcEvent.AddListener(std::bind(&BufferedRendering::OnFileListWndProc, this, _1, _2, _3, _4));
-		g_parentWndProcEvent.AddListener(std::bind(&BufferedRendering::OnParentWndProc, this, _1, _2, _3, _4));
+		g_fileListWndProcEvent.AddListener(std::bind(&BufferedRendering::OnFileListWndProc, this, _1, _2, _3, _4, _5));
+		g_parentWndProcEvent.AddListener(std::bind(&BufferedRendering::OnParentWndProc, this, _1, _2, _3, _4, _5));
 
 		g_postDrawIconEvent.AddListener(std::bind(&BufferedRendering::PostDrawIcon, this, _1));
 
-		g_fileListRedrawWindowEvent.AddListener([](CONST RECT*, HRGN, UINT){ g_global.m_needUpdateIcon = true; return true; });
+		g_fileListRedrawWindowEvent.AddListener([](CONST RECT*, HRGN, UINT){ g_global.m_needUpdateIcon = true; });
 		g_fileListBeginPaintEvent.AddListener(std::bind(&BufferedRendering::OnFileListBeginPaint, this, _1, _2));
 		g_fileListEndPaintEvent.AddListener(std::bind(&BufferedRendering::OnFileListEndPaint, this, _1));
 
@@ -173,7 +173,7 @@ namespace cd
 	*/
 
 	// 处理size、接管paint
-	bool BufferedRendering::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
+	void BufferedRendering::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res, bool& pass)
 	{
 		switch (message)
 		{
@@ -189,7 +189,7 @@ namespace cd
 		{
 			// 交给原窗口过程
 			if (!m_controlRendering || g_global.m_needUpdateIcon)
-				return true;
+				return;
 			
 			PAINTSTRUCT paint;
 			g_global.m_isInBeginPaint = true;
@@ -211,14 +211,13 @@ namespace cd
 			g_fileListEndPaintEvent(&paint);
 			EndPaint(g_global.m_fileListWnd, &paint);
 			res = 1;
-			return false;
+			pass = false;
 		}
 		}
-		return true;
 	}
 
 	// 触发画背景事件
-	bool BufferedRendering::OnParentWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
+	void BufferedRendering::OnParentWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res, bool& pass)
 	{
 		switch (message)
 		{
@@ -228,7 +227,9 @@ namespace cd
 			HDC hdc = m_bufferDC;
 
 			// 画背景
-			if (g_preDrawBackgroundEvent(hdc))
+			bool _pass = true;
+			g_preDrawBackgroundEvent(hdc, _pass);
+			if (_pass)
 			{
 				if (!g_global.m_isInBeginPaint)
 					CallWindowProc(g_global.m_oldParentWndProc, g_global.m_parentWnd, message, (WPARAM)hdc, lParam);
@@ -264,13 +265,12 @@ namespace cd
 
 			// 不需要上级CallWindowProc了
 			res = 1;
-			return false;
+			pass = false;
 		}
-		return true;
 	}
 
 	// 取画图标层结果
-	bool BufferedRendering::PostDrawIcon(HDC& hdc)
+	void BufferedRendering::PostDrawIcon(HDC& hdc)
 	{
 		// 现在缓冲DC是图标层
 		if (m_controlRendering && m_isUpdatingIcon)
@@ -305,11 +305,10 @@ namespace cd
 			// 图标层
 			m_iconBufferImg.AlphaBlend(m_bufferDC, x, y, width, height, x, y, width, height);
 		}
-		return true;
 	}
 
 	// 把窗口DC替换成缓冲DC
-	bool BufferedRendering::OnFileListBeginPaint(LPPAINTSTRUCT lpPaint, HDC& res)
+	void BufferedRendering::OnFileListBeginPaint(LPPAINTSTRUCT lpPaint, HDC& res)
 	{
 		if (res != NULL)
 		{
@@ -318,11 +317,10 @@ namespace cd
 
 			m_paintRect = lpPaint->rcPaint;
 		}
-		return true;
 	}
 
 	// 把缓冲DC复制回窗口DC
-	bool BufferedRendering::OnFileListEndPaint(LPPAINTSTRUCT lpPaint)
+	void BufferedRendering::OnFileListEndPaint(LPPAINTSTRUCT lpPaint)
 	{
 		if (lpPaint->hdc != NULL && m_originalDC != NULL)
 		{
@@ -334,6 +332,5 @@ namespace cd
 			int height = lpPaint->rcPaint.bottom - lpPaint->rcPaint.top;
 			m_bufferImg.BitBlt(m_originalDC, x, y, width, height, x, y);
 		}
-		return true;
 	}
 }

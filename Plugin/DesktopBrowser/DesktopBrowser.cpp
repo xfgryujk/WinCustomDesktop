@@ -13,20 +13,19 @@ DesktopBrowser::DesktopBrowser(HMODULE hModule) :
 	m_module(hModule),
 	m_menuID(cd::GetMenuID())
 {
-	cd::g_fileListWndProcEvent.AddListener(std::bind(&DesktopBrowser::OnFileListWndProc, this, _1, _2, _3, _4), m_module);
+	cd::g_fileListWndProcEvent.AddListener(std::bind(&DesktopBrowser::OnFileListWndProc, this, _1, _2, _3, _4, _5), m_module);
 	cd::g_postDrawBackgroundEvent.AddListener(std::bind(&DesktopBrowser::OnPostDrawBackground, this, _1), m_module);
 	cd::g_fileListWndSizeEvent.AddListener([this](int width, int height){
 		if (m_browser == nullptr)
-			return true;
+			return;
 		RECT pos = { 0, 0, width, height };
 		m_browser->SetPos(pos);
-		return true;
 	}, m_module);
-	cd::g_preDrawBackgroundEvent.AddListener([](HDC&){ return false; }, m_module);
-	cd::g_desktopCoveredEvent.AddListener([this]{ m_pauseFlag = true; return true; }, m_module);
-	cd::g_desktopUncoveredEvent.AddListener([this]{ m_pauseFlag = false; return true; }, m_module);
+	cd::g_preDrawBackgroundEvent.AddListener([](HDC&, bool& pass){ pass = false; }, m_module);
+	cd::g_desktopCoveredEvent.AddListener([this]{ m_pauseFlag = true; }, m_module);
+	cd::g_desktopUncoveredEvent.AddListener([this]{ m_pauseFlag = false; }, m_module);
 	cd::g_appendTrayMenuEvent.AddListener(std::bind(&DesktopBrowser::OnAppendTrayMenu, this, _1), m_module);
-	cd::g_chooseMenuItemEvent.AddListener(std::bind(&DesktopBrowser::OnChooseMenuItem, this, _1), m_module);
+	cd::g_chooseMenuItemEvent.AddListener(std::bind(&DesktopBrowser::OnChooseMenuItem, this, _1, _2), m_module);
 
 	cd::ExecInMainThread([this]{
 		SIZE size;
@@ -65,7 +64,7 @@ DesktopBrowser::~DesktopBrowser()
 }
 
 
-bool DesktopBrowser::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
+void DesktopBrowser::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res, bool& pass)
 {
 	switch (message)
 	{
@@ -74,37 +73,34 @@ bool DesktopBrowser::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lPara
 		LVHITTESTINFO hitTestInfo;
 		hitTestInfo.pt = { MAKEPOINTS(lParam).x, MAKEPOINTS(lParam).y };
 		if (ListView_HitTest(cd::GetFileListHwnd(), &hitTestInfo) != -1)
-			return true;
+			return;
 		// 设置图标以外的地方不属于文件列表窗口
 		res = HTTRANSPARENT;
-		return false;
+		pass = false;
 	}
 	}
-	return true;
 }
 
-bool DesktopBrowser::OnPostDrawBackground(HDC& hdc)
+void DesktopBrowser::OnPostDrawBackground(HDC& hdc)
 {
 	if (m_browser == nullptr)
-		return true;
+		return;
 	SIZE size;
 	cd::GetDesktopSize(size);
 	RECT rect = { 0, 0, size.cx, size.cy };
 	m_browser->Draw(hdc, rect);
-	return true;
 }
 
 
-bool DesktopBrowser::OnAppendTrayMenu(HMENU menu)
+void DesktopBrowser::OnAppendTrayMenu(HMENU menu)
 {
 	AppendMenu(menu, MF_STRING, m_menuID, APPNAME);
-	return true;
 }
 
-bool DesktopBrowser::OnChooseMenuItem(UINT menuID)
+void DesktopBrowser::OnChooseMenuItem(UINT menuID, bool& pass)
 {
 	if (menuID != m_menuID)
-		return true;
+		return;
 
 	std::thread([this]{
 		SHELLEXECUTEINFOW info = {};
@@ -127,5 +123,5 @@ bool DesktopBrowser::OnChooseMenuItem(UINT menuID)
 			g_config = newConfig;
 		});
 	}).detach();
-	return false;
+	pass = false;
 }

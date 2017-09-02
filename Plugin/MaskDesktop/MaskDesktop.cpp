@@ -16,10 +16,10 @@ MaskDesktop::MaskDesktop(HMODULE hModule) :
 	InitImg();
 
 	// 监听事件
-	cd::g_fileListWndProcEvent.AddListener(std::bind(&MaskDesktop::OnFileListWndProc, this, _1, _2, _3, _4), m_module);
+	cd::g_fileListWndProcEvent.AddListener(std::bind(&MaskDesktop::OnFileListWndProc, this, _1, _2, _3, _4, _5), m_module);
 	cd::g_postDrawIconEvent.AddListener(std::bind(&MaskDesktop::OnPostDrawIcon, this, _1), m_module);
 	cd::g_appendTrayMenuEvent.AddListener(std::bind(&MaskDesktop::OnAppendTrayMenu, this, _1), m_module);
-	cd::g_chooseMenuItemEvent.AddListener(std::bind(&MaskDesktop::OnChooseMenuItem, this, _1), m_module);
+	cd::g_chooseMenuItemEvent.AddListener(std::bind(&MaskDesktop::OnChooseMenuItem, this, _1, _2), m_module);
 
 	cd::RedrawDesktop();
 }
@@ -36,7 +36,7 @@ void MaskDesktop::InitImg()
 }
 
 
-bool MaskDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res)
+void MaskDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res, bool& pass)
 {
 	if (message == WM_MOUSEMOVE)
 	{
@@ -67,13 +67,12 @@ bool MaskDesktop::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, 
 
 		cd::RedrawDesktop(&rect);
 	}
-	return true;
 }
 
-bool MaskDesktop::OnPostDrawIcon(HDC& hdc)
+void MaskDesktop::OnPostDrawIcon(HDC& hdc)
 {
 	if (m_img.IsNull())
-		return true;
+		return;
 
 	m_img.AlphaBlend(hdc, m_curPos.x - g_config.m_size / 2, m_curPos.y - g_config.m_size / 2);
 
@@ -89,21 +88,18 @@ bool MaskDesktop::OnPostDrawIcon(HDC& hdc)
 	FillRect(hdc, &rect, brush);
 	rect = { m_curPos.x - g_config.m_size / 2 + 1, m_curPos.y + g_config.m_size / 2 - 1, m_curPos.x + g_config.m_size / 2 - 1, scrSize.cy };
 	FillRect(hdc, &rect, brush);
-
-	return true;
 }
 
 
-bool MaskDesktop::OnAppendTrayMenu(HMENU menu)
+void MaskDesktop::OnAppendTrayMenu(HMENU menu)
 {
 	AppendMenu(menu, MF_STRING, m_menuID, APPNAME);
-	return true;
 }
 
-bool MaskDesktop::OnChooseMenuItem(UINT menuID)
+void MaskDesktop::OnChooseMenuItem(UINT menuID, bool& pass)
 {
 	if (menuID != m_menuID)
-		return true;
+		return;
 
 	std::thread([this]{
 		SHELLEXECUTEINFOW info = {};
@@ -127,5 +123,5 @@ bool MaskDesktop::OnChooseMenuItem(UINT menuID)
 				InitImg();
 		});
 	}).detach();
-	return false;
+	pass = false;
 }

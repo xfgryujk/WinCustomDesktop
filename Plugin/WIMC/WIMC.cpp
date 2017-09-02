@@ -18,23 +18,22 @@ WIMC::WIMC(HMODULE hModule) :
 	m_fakeCursors.resize(g_config.m_nCursors);
 
 	cd::g_postDrawIconEvent.AddListener(std::bind(&WIMC::OnPostDrawIcon, this, _1), m_module);
-	cd::g_fileListWndProcEvent.AddListener([](UINT message, WPARAM, LPARAM, LRESULT& res){
+	cd::g_fileListWndProcEvent.AddListener([](UINT message, WPARAM, LPARAM, LRESULT&, bool&){
 		if (message == WM_MOUSEMOVE)
 			cd::RedrawDesktop();
-		return true;
 	}, m_module);
 	cd::g_appendTrayMenuEvent.AddListener(std::bind(&WIMC::OnAppendTrayMenu, this, _1), m_module);
-	cd::g_chooseMenuItemEvent.AddListener(std::bind(&WIMC::OnChooseMenuItem, this, _1), m_module);
+	cd::g_chooseMenuItemEvent.AddListener(std::bind(&WIMC::OnChooseMenuItem, this, _1, _2), m_module);
 	
 	cd::RedrawDesktop();
 }
 
-bool WIMC::OnPostDrawIcon(HDC& hdc)
+void WIMC::OnPostDrawIcon(HDC& hdc)
 {
 	CURSORINFO info;
 	info.cbSize = sizeof(info);
 	if (!GetCursorInfo(&info))
-		return true;
+		return;
 
 	const auto& pos = info.ptScreenPos;
 	const float distance = sqrtf(float((pos.x - m_cursorOrigin.x) * (pos.x - m_cursorOrigin.x) 
@@ -46,21 +45,18 @@ bool WIMC::OnPostDrawIcon(HDC& hdc)
 
 	for (auto& i : m_fakeCursors)
 		i.Draw(hdc, info.hCursor, distance, angle, width, height);
-
-	return true;
 }
 
 
-bool WIMC::OnAppendTrayMenu(HMENU menu)
+void WIMC::OnAppendTrayMenu(HMENU menu)
 {
 	AppendMenu(menu, MF_STRING, m_menuID, APPNAME);
-	return true;
 }
 
-bool WIMC::OnChooseMenuItem(UINT menuID)
+void WIMC::OnChooseMenuItem(UINT menuID, bool& pass)
 {
 	if (menuID != m_menuID)
-		return true;
+		return;
 
 	std::thread([this]{
 		SHELLEXECUTEINFOW info = {};
@@ -86,7 +82,7 @@ bool WIMC::OnChooseMenuItem(UINT menuID)
 			g_config = newConfig;
 		});
 	}).detach();
-	return false;
+	pass = false;
 }
 
 
