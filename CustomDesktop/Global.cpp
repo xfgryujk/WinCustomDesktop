@@ -6,6 +6,8 @@ namespace cd
 {
 	Global& g_global = Global::GetInstance();
 
+	const UINT WM_PREUNLOAD = RegisterWindowMessage(_T("WinCustomDesktopPreUnload"));
+
 
 	bool Global::Init()
 	{

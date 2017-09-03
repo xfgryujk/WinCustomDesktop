@@ -108,22 +108,9 @@ namespace cd
 	bool BufferedRendering::InitWallpaperDC()
 	{
 		// 取壁纸路径
-		HKEY key = NULL;
-		if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Control Panel\\Desktop"), 0, KEY_READ, &key) != ERROR_SUCCESS)
-			return false;
-		std::wstring wallpaperPath;
-		wallpaperPath.resize(MAX_PATH);
-		DWORD type = 0;
-		DWORD size = DWORD(wallpaperPath.size() * sizeof(WCHAR));
-		if (RegQueryValueExW(key, L"WallPaper", NULL, &type, (LPBYTE)&wallpaperPath.front(), &size) != ERROR_SUCCESS
-			|| type != REG_SZ)
-		{
-			RegCloseKey(key);
-			return false;
-		}
-		RegCloseKey(key);
-		size /= sizeof(WCHAR);
-		wallpaperPath.resize(wallpaperPath[size - 1] == L'\0' ? size - 1 : size);
+		std::wstring wallpaperPath(MAX_PATH, L'\0');
+		SystemParametersInfoW(SPI_GETDESKWALLPAPER, MAX_PATH, &wallpaperPath.front(), 0);
+		wallpaperPath.resize(wcslen(wallpaperPath.c_str()));
 
 		// 创建壁纸DC
 		CImage img;

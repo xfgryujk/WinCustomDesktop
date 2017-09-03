@@ -47,5 +47,5 @@ namespace cd
 	extern Global& g_global;
 
 	// 准备卸载的消息，由Inject.exe或选择退出菜单项时发送
-	const UINT WM_PREUNLOAD = WM_APP + 999;
+	extern const UINT WM_PREUNLOAD;
 }

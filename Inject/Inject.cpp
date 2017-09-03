@@ -7,7 +7,7 @@
 #include <functional>
 
 
-const UINT WM_PREUNLOAD = WM_APP + 999;
+const UINT WM_PREUNLOAD = RegisterWindowMessage(_T("WinCustomDesktopPreUnload"));
 
 
 
