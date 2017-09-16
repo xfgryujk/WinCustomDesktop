@@ -130,29 +130,13 @@ HMODULE GetRemoteModuleHandle(DWORD pid, LPCTSTR moduleName)
 	return handle;
 }
 
-// 桌面顶级窗口可能是Program Manager或者WorkerW
-HWND GetDesktopTopHwnd()
-{
-	HWND topHwnd = NULL;
-	EnumWindows([](HWND hwnd, LPARAM pTopHwnd)->BOOL{
-		const HWND parentWnd = FindWindowEx(hwnd, NULL, _T("SHELLDLL_DefView"), _T(""));
-		if (parentWnd != NULL && FindWindowEx(parentWnd, NULL, _T("SysListView32"), _T("FolderView")) != NULL)
-		{
-			*reinterpret_cast<HWND*>(pTopHwnd) = hwnd;
-			return FALSE;
-		}
-		return TRUE;
-	}, (LPARAM)&topHwnd);
-	return topHwnd;
-}
-
 
 int _tmain(int argc, _TCHAR* argv[])
 {
 	EnablePrivilege(TRUE);
 
 	// 打开进程
-	HWND hwnd = GetDesktopTopHwnd();
+	HWND hwnd = GetShellWindow();
 	DWORD pid;
 	GetWindowThreadProcessId(hwnd, &pid);
 	const HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);

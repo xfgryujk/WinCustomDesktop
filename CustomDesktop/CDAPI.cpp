@@ -40,19 +40,19 @@ namespace cd
 
 	CD_API UINT WINAPI GetFileListMsgID()
 	{
-		static UINT s_nextMsgID = WM_APP + 1000;
+		static UINT s_nextMsgID = WM_USER + 1000;
 		return s_nextMsgID++;
 	}
 
 	CD_API UINT WINAPI GetParentMsgID()
 	{
-		static UINT s_nextMsgID = WM_APP + 1000;
+		static UINT s_nextMsgID = WM_USER + 1000;
 		return s_nextMsgID++;
 	}
 
 	CD_API UINT WINAPI GetTopMsgID()
 	{
-		static UINT s_nextMsgID = WM_APP + 1000;
+		static UINT s_nextMsgID = WM_USER + 1000;
 		return s_nextMsgID++;
 	}
 
