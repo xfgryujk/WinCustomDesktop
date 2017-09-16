@@ -2,6 +2,7 @@
 #include "CheckCovered.h"
 #include <CDEvents.h>
 #include <CDAPI.h>
+#include "Global.h"
 #ifdef _WIN64
 #include <Dwmapi.h>
 #endif
@@ -79,12 +80,26 @@ namespace cd
 	{
 		m_coveredByHwnd = NULL;
 
+		// 对于D3D独占全屏的程序，不能用IsZoomed判断全屏
+		HWND hwnd = GetForegroundWindow();
+		if (hwnd != g_global.m_topWnd)
+		{
+			RECT rect;
+			GetWindowRect(hwnd, &rect);
+			if (rect.left == 0 && rect.top == 0
+				&& rect.right == g_global.m_screenSize.cx && rect.bottom == g_global.m_screenSize.cy)
+			{
+				m_coveredByHwnd = hwnd;
+				return true;
+			}
+		}
+
 		EnumWindows([](HWND hwnd, LPARAM pCoveredByHwnd)->BOOL{
 #ifdef _WIN64
 			// 对于win10 app，不能用IsWindowVisible判断是否可见
-			BOOL isCloaked = FALSE;
-			DwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, &isCloaked, sizeof(isCloaked));
-			if (isCloaked)
+			DWORD cloaked = 0;
+			DwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, &cloaked, sizeof(cloaked));
+			if (cloaked != 0)
 				return TRUE;
 #endif
 
