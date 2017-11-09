@@ -22,6 +22,7 @@
     <ProjectGuid>{760416AE-79C5-4778-BE97-18472B4E61BB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>CustomDesktop</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

@@ -10,7 +10,6 @@ namespace cd
 	CD_API HWND WINAPI GetParentHwnd();
 	CD_API HWND WINAPI GetFileListHwnd();
 	CD_API void WINAPI GetDesktopSize(SIZE& size);
-	CD_API void WINAPI GetScreenSize(SIZE& size);
 	CD_API void WINAPI RedrawDesktop(const RECT* rect = NULL);
 
 	// 在文件列表窗口过程中分配一个唯一的消息ID

@@ -15,7 +15,6 @@ namespace cd
 		HWND m_parentWnd = NULL;
 		HWND m_fileListWnd = NULL;
 		SIZE m_wndSize;
-		SIZE m_screenSize;
 
 		// 原窗口过程
 		WNDPROC m_oldFileListWndProc = NULL;

@@ -28,12 +28,11 @@ namespace cd
 		HDC m_originalDC = NULL;
 		// BeginPaint获得的更新区域
 		RECT m_paintRect;
-		CImage m_bufferImg, m_bufferImgBackup;
+		CImage m_bufferImg;
 		HDC m_bufferDC = NULL;
 
-		CImage m_wallpaperImg;
-		CImage m_iconBufferImg;
-		// m_bufferImg（背景层）复制到m_bufferImgBackup了，现在m_bufferImg是图标层
+		CImage m_wallpaperImg, m_bgBackupImg, m_iconBufferImg;
+		// m_bufferImg（背景层）复制到m_bgBackupImg了，现在m_bufferImg是图标层
 		bool m_isUpdatingIcon = false;
 
 

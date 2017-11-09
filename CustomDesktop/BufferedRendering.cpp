@@ -63,16 +63,15 @@ namespace cd
 			return true;
 
 		if (!m_bufferImg.IsNull())
-		{
 			m_bufferImg.ReleaseDC();
-			m_bufferImg.Destroy();
+
+		CImage* imgs[] = { &m_bufferImg, &m_bgBackupImg, &m_iconBufferImg, &m_wallpaperImg };
+		for (auto& img : imgs)
+		{
+			if (!img->IsNull())
+				img->Destroy();
 		}
-		if (!m_bufferImgBackup.IsNull())
-			m_bufferImgBackup.Destroy();
-		if (!m_wallpaperImg.IsNull())
-			m_wallpaperImg.Destroy();
-		if (!m_iconBufferImg.IsNull())
-			m_iconBufferImg.Destroy();
+
 		CImage::ReleaseGDIPlus();
 
 		m_hasInit = false;
@@ -83,23 +82,18 @@ namespace cd
 	bool BufferedRendering::InitDC()
 	{
 		if (!m_bufferImg.IsNull())
-		{
 			m_bufferImg.ReleaseDC();
-			m_bufferImg.Destroy();
+
+		CImage* imgs[] = { &m_bufferImg, &m_bgBackupImg, &m_iconBufferImg };
+		for (auto& img : imgs)
+		{
+			if (!img->IsNull())
+				img->Destroy();
+			if (!img->Create(g_global.m_wndSize.cx, g_global.m_wndSize.cy, 32, CImage::createAlphaChannel))
+				return false;
 		}
-		if (!m_bufferImg.Create(g_global.m_wndSize.cx, g_global.m_wndSize.cy, 32, CImage::createAlphaChannel))
-			return false;
+
 		m_bufferDC = m_bufferImg.GetDC();
-
-		if (!m_bufferImgBackup.IsNull())
-			m_bufferImgBackup.Destroy();
-		if (!m_bufferImgBackup.Create(g_global.m_wndSize.cx, g_global.m_wndSize.cy, 32, CImage::createAlphaChannel))
-			return false;
-
-		if (!m_iconBufferImg.IsNull())
-			m_iconBufferImg.Destroy();
-		if (!m_iconBufferImg.Create(g_global.m_wndSize.cx, g_global.m_wndSize.cy, 32, CImage::createAlphaChannel))
-			return false;
 
 		InitWallpaperDC();
 		return true;
@@ -121,15 +115,16 @@ namespace cd
 			m_wallpaperImg.ReleaseDC();
 			m_wallpaperImg.Destroy();
 		}
-		if (!m_wallpaperImg.Create(g_global.m_screenSize.cx, g_global.m_screenSize.cy, 32, CImage::createAlphaChannel))
+		// 如果是多屏幕应该对每个屏幕分别画壁纸，但是我懒得做了...
+		if (!m_wallpaperImg.Create(g_global.m_wndSize.cx, g_global.m_wndSize.cy, 32, CImage::createAlphaChannel))
 			return false;
 
 		HDC wallpaperDC = m_wallpaperImg.GetDC();
 		{
 			Gdiplus::Graphics graph(wallpaperDC);
 			Gdiplus::SolidBrush brush(Gdiplus::Color::Black);
-			graph.FillRectangle(&brush, 0, 0, g_global.m_screenSize.cx, g_global.m_screenSize.cy);
-			img.Draw(wallpaperDC, 0, 0, g_global.m_screenSize.cx, g_global.m_screenSize.cy);
+			graph.FillRectangle(&brush, 0, 0, g_global.m_wndSize.cx, g_global.m_wndSize.cy);
+			img.Draw(wallpaperDC, 0, 0, g_global.m_wndSize.cx, g_global.m_wndSize.cy);
 		}
 		m_wallpaperImg.ReleaseDC();
 		return true;
@@ -149,7 +144,7 @@ namespace cd
 	2. 需要更新图标层时（由原窗口过程渲染图标）：
 	    （原窗口过程）文件列表WM_PAINT -> BeginPaint -> g_fileListBeginPaintEvent（把窗口DC替换成缓冲DC）
 	    -> 父窗口WM_ERASEBKGND -> g_preDrawBackgroundEvent -> 画背景 -> g_postDrawBackgroundEvent
-		-> 此时缓冲DC是背景，把缓冲图像复制到m_bufferImgBackup，再把缓冲图像的alpha清0准备画图标 -> 画图标
+		-> 此时缓冲DC是背景，把缓冲图像复制到m_bgBackupImg，再把缓冲图像的alpha清0准备画图标 -> 画图标
 		-> g_postDrawIconEvent（此时缓冲DC是图标，把缓冲图像复制到m_iconBufferImg，然后把背景和图标画回缓冲DC）
 		-> g_fileListEndPaintEvent（把缓冲DC复制回窗口DC） -> EndPaint
 	
@@ -166,7 +161,6 @@ namespace cd
 		{
 		case WM_SIZE:
 			g_global.m_wndSize = { LOWORD(lParam), HIWORD(lParam) };
-			g_global.m_screenSize = { GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
 			InitDC();
 
 			res = 1;
@@ -208,28 +202,26 @@ namespace cd
 	{
 		switch (message)
 		{
-		case WM_ERASEBKGND: // 当顶级窗口是WorkerW时收不到这个消息？
-			// wParam不一定是m_bufferDC，comctl内部也用了双缓冲
-			// 使用hdc作为副本防止m_bufferDC被事件改变
-			HDC hdc = m_bufferDC;
+		case WM_ERASEBKGND: // BUG：当顶级窗口是WorkerW时收不到这个消息？
+			// 此时wParam不一定是m_bufferDC，comctl内部也用了双缓冲
 
 			// 画背景
 			bool _pass = true;
-			g_preDrawBackgroundEvent(hdc, _pass);
+			g_preDrawBackgroundEvent((HDC&)wParam, _pass);
 			if (_pass)
 			{
 				if (!g_global.m_isInBeginPaint)
-					CallWindowProc(g_global.m_oldParentWndProc, g_global.m_parentWnd, message, (WPARAM)hdc, lParam);
+					CallWindowProc(g_global.m_oldParentWndProc, g_global.m_parentWnd, message, wParam, lParam);
 				else
 				{
-					// 禁用XP下BeginPaint擦背景，自己画背景
-					// 只有XP下BeginPaint才会擦除背景
-					// XP下用PaintDesktop画背景，但是不能画在内存DC，所以只好自己画背景到缓冲DC
-					m_wallpaperImg.BitBlt(hdc, m_paintRect.left, m_paintRect.top, m_paintRect.right - m_paintRect.left,
+					// 已知只有XP下BeginPaint才会擦除背景
+					// 此时wParam是窗口DC，直接画上去会闪烁，所以禁用XP下BeginPaint擦背景，自己画背景
+					// XP下用PaintDesktop画背景，但是这个函数不能画在内存DC，所以只好自己画背景到缓冲DC
+					m_wallpaperImg.BitBlt(m_bufferDC, m_paintRect.left, m_paintRect.top, m_paintRect.right - m_paintRect.left,
 						m_paintRect.bottom - m_paintRect.top, m_paintRect.left, m_paintRect.top);
 				}
 			}
-			g_postDrawBackgroundEvent(hdc);
+			g_postDrawBackgroundEvent((HDC&)wParam);
 
 			// 准备更新图标层
 			if (m_controlRendering && g_global.m_needUpdateIcon)
@@ -242,12 +234,15 @@ namespace cd
 				int width = m_paintRect.right - m_paintRect.left;
 				int height = m_paintRect.bottom - m_paintRect.top;
 
-				// 背景复制到m_bufferImgBackup
-				m_bufferImg.BitBlt(m_bufferImgBackup.GetDC(), x, y, width, height, x, y);
-				m_bufferImgBackup.ReleaseDC();
+				// 背景复制到m_bgBackupImg
+				BitBlt(m_bgBackupImg.GetDC(), x, y, width, height, (HDC)wParam, x, y, SRCCOPY);
+				m_bgBackupImg.ReleaseDC();
 
 				// wParam alpha清0，准备画图标
+				// BUG：多屏幕时有时候非主屏幕桌面RGB没清0导致图标层取到了背景？
 				FillRect((HDC)wParam, &m_paintRect, (HBRUSH)GetStockObject(BLACK_BRUSH));
+				/*if ((HDC)wParam != m_bufferDC)
+					FillRect(m_bufferDC, &m_paintRect, (HBRUSH)GetStockObject(BLACK_BRUSH));*/
 			}
 
 			// 不需要上级CallWindowProc了
@@ -259,7 +254,9 @@ namespace cd
 	// 取画图标层结果
 	void BufferedRendering::PostDrawIcon(HDC& hdc)
 	{
-		// 现在缓冲DC是图标层
+		// 此时hdc不一定是m_bufferDC，comctl内部也用了双缓冲
+
+		// 现在hdc是图标层
 		if (m_controlRendering && m_isUpdatingIcon)
 		{
 			m_isUpdatingIcon = false;
@@ -270,7 +267,7 @@ namespace cd
 			int height = m_paintRect.bottom - m_paintRect.top;
 
 			// 取图标层
-			m_bufferImg.BitBlt(m_iconBufferImg.GetDC(), x, y, width, height, x, y);
+			BitBlt(m_iconBufferImg.GetDC(), x, y, width, height, hdc, x, y, SRCCOPY);
 			m_iconBufferImg.ReleaseDC();
 
 			// 处理GDI渲染alpha为0的问题
@@ -288,9 +285,9 @@ namespace cd
 
 
 			// 背景层
-			m_bufferImgBackup.BitBlt(m_bufferDC, x, y, width, height, x, y);
+			m_bgBackupImg.BitBlt(hdc, x, y, width, height, x, y);
 			// 图标层
-			m_iconBufferImg.AlphaBlend(m_bufferDC, x, y, width, height, x, y, width, height);
+			m_iconBufferImg.AlphaBlend(hdc, x, y, width, height, x, y, width, height);
 		}
 	}
 
@@ -303,6 +300,9 @@ namespace cd
 			res = lpPaint->hdc = m_bufferDC;
 
 			m_paintRect = lpPaint->rcPaint;
+			HRGN rgn = CreateRectRgn(lpPaint->rcPaint.left, lpPaint->rcPaint.top, lpPaint->rcPaint.right, lpPaint->rcPaint.bottom);
+			SelectClipRgn(m_bufferDC, rgn);
+			DeleteObject(rgn);
 		}
 	}
 

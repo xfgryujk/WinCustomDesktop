@@ -81,13 +81,15 @@ namespace cd
 		m_coveredByHwnd = NULL;
 
 		// 对于D3D独占全屏的程序，不能用IsZoomed判断全屏
+		int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+		int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 		HWND hwnd = GetForegroundWindow();
 		if (hwnd != g_global.m_topWnd)
 		{
 			RECT rect;
 			GetWindowRect(hwnd, &rect);
 			if (rect.left == 0 && rect.top == 0
-				&& rect.right == g_global.m_screenSize.cx && rect.bottom == g_global.m_screenSize.cy)
+				&& rect.right == screenWidth && rect.bottom == screenHeight)
 			{
 				m_coveredByHwnd = hwnd;
 				return true;
