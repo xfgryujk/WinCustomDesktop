@@ -70,9 +70,11 @@ void DesktopBrowser::OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lPara
 	{
 	case WM_NCHITTEST:
 	{
+		HWND hwnd = cd::GetFileListHwnd();
 		LVHITTESTINFO hitTestInfo;
 		hitTestInfo.pt = { MAKEPOINTS(lParam).x, MAKEPOINTS(lParam).y };
-		if (ListView_HitTest(cd::GetFileListHwnd(), &hitTestInfo) != -1)
+		ScreenToClient(hwnd, &hitTestInfo.pt);
+		if (ListView_HitTest(hwnd, &hitTestInfo) != -1)
 			return;
 		// 设置图标以外的地方不属于文件列表窗口
 		res = HTTRANSPARENT;

@@ -41,7 +41,6 @@ namespace cd
 
 		void OnFileListWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res, bool& pass);
 		void OnParentWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res, bool& pass);
-		bool OnDrawBackground(HDC& hdc);
 		void PostDrawIcon(HDC& hdc);
 		void OnFileListBeginPaint(LPPAINTSTRUCT lpPaint, HDC& res);
 		void OnFileListEndPaint(LPPAINTSTRUCT lpPaint);

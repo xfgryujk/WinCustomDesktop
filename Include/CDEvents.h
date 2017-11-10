@@ -16,8 +16,8 @@ namespace cd
 	extern CD_API PreEvent<UINT, bool&>                            g_chooseMenuItemEvent;        // 用户选择了某菜单项，参数：菜单ID, 不取消
 
 	// 渲染的事件
-	extern CD_API PreEvent<HDC&, bool&>                            g_preDrawBackgroundEvent;	 // 画桌面背景前被调用，用来取消画背景节省CPU，参数：目标DC, 不取消
-	extern CD_API PostEvent<HDC&>                                  g_postDrawBackgroundEvent;	 // 画完桌面背景后被调用，参数：目标DC
+	extern CD_API PreEvent<HDC&, bool&>                            g_preDrawBackgroundEvent;	 // 画桌面背景前被调用，一次渲染桌面中可能调用多次，可用来取消画背景以节省CPU，参数：目标DC, 不取消
+	extern CD_API PostEvent<HDC&>                                  g_postDrawBackgroundEvent;	 // 画完桌面背景后被调用，一次渲染桌面中可能调用多次，参数：目标DC
 	extern CD_API PreEvent<HDC&>                                   g_postDrawIconEvent;	         // 画完图标后被调用，参数：目标DC
 	
 	// hook的事件

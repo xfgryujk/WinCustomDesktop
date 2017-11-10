@@ -197,13 +197,13 @@ namespace cd
 		}
 	}
 
-	// 触发画背景事件
+	// 画背景
 	void BufferedRendering::OnParentWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res, bool& pass)
 	{
 		switch (message)
 		{
 		case WM_ERASEBKGND: // BUG：当顶级窗口是WorkerW时收不到这个消息？
-			// 此时wParam不一定是m_bufferDC，comctl内部也用了双缓冲
+			// 此时wParam不一定是m_bufferDC，因为comctl内部也用了双缓冲
 
 			// 画背景
 			bool _pass = true;
@@ -226,7 +226,7 @@ namespace cd
 			// 准备更新图标层
 			if (m_controlRendering && g_global.m_needUpdateIcon)
 			{
-				g_global.m_needUpdateIcon = false;
+				// 由于一次WM_PAINT中WM_ERASEBKGND可能被发送多次，这里不能设置g_global.m_needUpdateIcon = false
 				m_isUpdatingIcon = true;
 
 				int x = m_paintRect.left;
@@ -235,14 +235,12 @@ namespace cd
 				int height = m_paintRect.bottom - m_paintRect.top;
 
 				// 背景复制到m_bgBackupImg
+				// BUG：多次触发WM_ERASEBKGND后可能把alpha清0的部分一起复制导致背景全黑
 				BitBlt(m_bgBackupImg.GetDC(), x, y, width, height, (HDC)wParam, x, y, SRCCOPY);
 				m_bgBackupImg.ReleaseDC();
 
 				// wParam alpha清0，准备画图标
-				// BUG：多屏幕时有时候非主屏幕桌面RGB没清0导致图标层取到了背景？
 				FillRect((HDC)wParam, &m_paintRect, (HBRUSH)GetStockObject(BLACK_BRUSH));
-				/*if ((HDC)wParam != m_bufferDC)
-					FillRect(m_bufferDC, &m_paintRect, (HBRUSH)GetStockObject(BLACK_BRUSH));*/
 			}
 
 			// 不需要上级CallWindowProc了
@@ -260,6 +258,7 @@ namespace cd
 		if (m_controlRendering && m_isUpdatingIcon)
 		{
 			m_isUpdatingIcon = false;
+			g_global.m_needUpdateIcon = false;
 
 			int x = m_paintRect.left;
 			int y = m_paintRect.top;
