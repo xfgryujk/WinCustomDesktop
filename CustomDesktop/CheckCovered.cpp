@@ -97,7 +97,7 @@ namespace cd
 			}
 		}
 
-		EnumWindows([](HWND hwnd, LPARAM pCoveredByHwnd)->BOOL{
+		EnumWindows([](HWND hwnd, LPARAM pCoveredByHwnd)->BOOL {
 #ifdef _WIN64
 			// 对于win10 app，不能用IsWindowVisible判断是否可见
 			DWORD cloaked = 0;

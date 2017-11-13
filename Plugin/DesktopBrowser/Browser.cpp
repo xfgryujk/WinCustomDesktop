@@ -80,7 +80,7 @@ void Browser::SetPos(const RECT& pos)
 //	HWND hwnd;
 //	if (FAILED(m_oleInPlaceObject->GetWindow(&hwnd)))
 //		return NULL;
-//	EnumChildWindows(hwnd, [](HWND hwnd, LPARAM thiz)->BOOL{
+//	EnumChildWindows(hwnd, [](HWND hwnd, LPARAM thiz)->BOOL {
 //		TCHAR className[100];
 //		GetClassName(hwnd, className, _countof(className));
 //		if (_tcscmp(className, _T("Internet Explorer_Server")) == 0)

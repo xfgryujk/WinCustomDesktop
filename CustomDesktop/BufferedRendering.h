@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Singleton.h"
+#include <memory>
 #include <atlimage.h>
 
 
@@ -26,12 +27,17 @@ namespace cd
 		bool m_controlRendering = true;
 
 		HDC m_originalDC = NULL;
-		// BeginPaint获得的更新区域
-		RECT m_paintRect;
 		CImage m_bufferImg;
 		HDC m_bufferDC = NULL;
 
 		CImage m_wallpaperImg, m_bgBackupImg, m_iconBufferImg;
+		struct HRGNDeleter
+		{
+			typedef HRGN pointer;
+			void operator() (HRGN rgn) { DeleteObject(rgn); }
+		};
+		// 背景备份的裁剪区，用来防止多次绘制背景覆盖之前的内容
+		std::unique_ptr<HRGN, HRGNDeleter> m_bgBackupClipRgn;
 		// m_bufferImg（背景层）复制到m_bgBackupImg了，现在m_bufferImg是图标层
 		bool m_isUpdatingIcon = false;
 

@@ -21,7 +21,7 @@ DesktopBrowser::DesktopBrowser(HMODULE hModule) :
 		RECT pos = { 0, 0, width, height };
 		m_browser->SetPos(pos);
 	}, m_module);
-	cd::g_preDrawBackgroundEvent.AddListener([](HDC&, bool& pass){ pass = false; }, m_module);
+	cd::g_preDrawBackgroundEvent.AddListener([](HDC&, bool& pass) { pass = false; }, m_module);
 	cd::g_desktopCoveredEvent.AddListener([this]{ m_pauseFlag = true; }, m_module);
 	cd::g_desktopUncoveredEvent.AddListener([this]{ m_pauseFlag = false; }, m_module);
 	cd::g_appendTrayMenuEvent.AddListener(std::bind(&DesktopBrowser::OnAppendTrayMenu, this, _1), m_module);
