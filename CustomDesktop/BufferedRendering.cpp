@@ -250,6 +250,7 @@ namespace cd
 				// 用裁剪区防止多次WM_ERASEBKGND覆盖之前的内容
 				SelectClipRgn(bgBackupDC, m_bgBackupClipRgn.get());
 				BitBlt(bgBackupDC, x, y, width, height, (HDC)wParam, x, y, SRCCOPY);
+				SelectClipRgn(bgBackupDC, NULL);
 				m_bgBackupImg.ReleaseDC();
 
 				// 设置背景备份的裁剪区，防止多次画背景覆盖之前的背景备份
@@ -257,7 +258,6 @@ namespace cd
 				CombineRgn(m_bgBackupClipRgn.get(), m_bgBackupClipRgn.get(), rgn.get(), RGN_DIFF);
 
 				// wParam alpha清0，准备画图标
-				// BUG：多次WM_ERASEBKGND会清除之前画的图标？
 				FillRect((HDC)wParam, &rect, (HBRUSH)GetStockObject(BLACK_BRUSH));
 			}
 
